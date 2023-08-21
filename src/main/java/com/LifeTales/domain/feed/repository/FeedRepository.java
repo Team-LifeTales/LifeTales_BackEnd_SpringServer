@@ -9,4 +9,8 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
     boolean existsBySeq(Long seq);
 
     List<Feed> findBySeqContaining(Long seq);
+
+    List<Feed> findByFamilySeq( Long familySeq);
+
+    List<Feed> findByUserSeq( Long userSeq);
 }
