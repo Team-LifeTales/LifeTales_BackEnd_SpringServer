@@ -1,11 +1,19 @@
 package com.LifeTales.domain.feed.service;
 
 
+import com.LifeTales.common.User.FamilyNicknameChecker;
+import com.LifeTales.common.User.UserIdChecker;
+import com.LifeTales.domain.family.domain.Family;
+import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.feed.domain.Feed;
 import com.LifeTales.domain.feed.domain.FeedImageList;
+import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.repository.FeedImageListRepository;
 import com.LifeTales.domain.feed.repository.FeedRepository;
+import com.LifeTales.domain.user.domain.User;
+import com.LifeTales.domain.user.repository.UserRepository;
+import com.LifeTales.global.s3.RequestIMGService;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -17,6 +25,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -31,10 +41,14 @@ public class FeedService {
     @Autowired
     private final FeedRepository feedRepository;
     private final FeedImageListRepository feedImageListRepository;
+    private final FamilyRepository familyRepository;
+    private final UserRepository userRepository;
     private final AmazonS3Client amazonS3Client;
     @Value("${cloud.aws.s3.bucket}")
     private String bucket;
-
+    private final FamilyNicknameChecker familySeqChecker;
+    private final UserIdChecker userIdChecker;
+    private final RequestIMGService imgService;
     public String Feed_upload_service(FeedUploadDTO uploadData){
         try {
             String fileName = "";
@@ -104,6 +118,118 @@ public class FeedService {
         }
     }
 
+    public List<FeedDataDTO> getFeedDataForFamily(String nickname) throws IOException {
+        /**
+         * to do list
+         * 가족 닉네임을 파라미터로 받음
+         * 닉네임을 이용해서 FamilySeq를 받아옴
+         * familySeq에 해당하는 feed를 모두 가져옴
+         * feed에 해당하는 feedImage를 대표로 맨 앞 하나만 가져옴
+         * 가져온 feed들을 화면에 띄움
+         * */
 
+        log.info("getFeedDataForFamily Start >> {}",nickname);
+        boolean idCheck = familySeqChecker.doesNickNameExist(nickname);
+        log.info("getFeedDataForUser checkId result >> {}" , idCheck);
+        if(idCheck){
+            log.info("getDataForUser checkId Success >> {}" , nickname);
+            Family family = familyRepository.findByNickName(nickname);
+            Long familySeq = family.getSeq();
+            List<Feed> feedDatas = feedRepository.findByFamilySeq(familySeq);
+            //데이터 셋업
+            List<FeedDataDTO> feedDataDTOList = new ArrayList<>();
+            for(Feed feedData: feedDatas){
+                FeedDataDTO feedDataDTO = new FeedDataDTO();
+                feedDataDTO.setUserSeq(feedData.getUserSeq());
+                feedDataDTO.setFeedSeq(feedData.getSeq());
+                List<FeedImageList> feedImageList = feedImageListRepository.findByFeedSeq(feedData.getSeq());
+                FeedImageList firstFeedImage = feedImageList.get(0);
+                String firstFeedImageURL = firstFeedImage.getFeedImageURL();
+                if(firstFeedImageURL != null){
+                    log.info("getFeedDataForFamily S3 connect Start");
+                    String objectKey = firstFeedImageURL;
+                    try {
+                        InputStream feedIMG = imgService.getImageInputStream(objectKey);
+                        feedDataDTO.setFeedIMG(feedIMG);
+
+                    }catch (SdkClientException e){
+                        //aws sdk Error
+                        log.error("getFeedDataForFamily : " + e);
+                        return null;
+                    }catch (Exception e){
+                        log.error("getFeedDataForFamily : " + e);
+                        return null;
+                    }
+
+                }
+                feedDataDTOList.add(feedDataDTO);
+            }
+            return feedDataDTOList;
+
+
+
+        }else{
+
+        }
+
+        return null;
+    }
+
+    public List<FeedDataDTO> getFeedDataForUser(String id) throws IOException {
+        /**
+         * to do list
+         * 가족 닉네임을 파라미터로 받음
+         * 닉네임을 이용해서 FamilySeq를 받아옴
+         * familySeq에 해당하는 feed를 모두 가져옴
+         * feed에 해당하는 feedImage를 대표로 맨 앞 하나만 가져옴
+         * 가져온 feed들을 화면에 띄움
+         * */
+
+        log.info("getFeedDataForUser Start >> {}",id);
+        boolean idCheck = userIdChecker.doesIdExist(id);
+        log.info("getFeedDataForUser checkId result >> {}" , idCheck);
+        if(idCheck){
+            log.info("getDataForUser checkId Success >> {}" , idCheck);
+            User user = userRepository.findById(id);
+            Long userSeq = user.getSeq();
+            List<Feed> feedDatas = feedRepository.findByUserSeq(userSeq);
+            //데이터 셋업
+            List<FeedDataDTO> feedDataDTOList = new ArrayList<>();
+            for(Feed feedData: feedDatas){
+                FeedDataDTO feedDataDTO = new FeedDataDTO();
+                feedDataDTO.setUserSeq(feedData.getUserSeq());
+                feedDataDTO.setFeedSeq(feedData.getSeq());
+                List<FeedImageList> feedImageList = feedImageListRepository.findByFeedSeq(feedData.getSeq());
+                FeedImageList firstFeedImage = feedImageList.get(0);
+                String firstFeedImageURL = firstFeedImage.getFeedImageURL();
+                if(firstFeedImageURL != null){
+                    log.info("getFeedDataForUser S3 connect Start");
+                    String objectKey = firstFeedImageURL;
+                    try {
+                        InputStream feedIMG = imgService.getImageInputStream(objectKey);
+                        feedDataDTO.setFeedIMG(feedIMG);
+
+                    }catch (SdkClientException e){
+                        //aws sdk Error
+                        log.error("getFeedDataForUser : " + e);
+                        return null;
+                    }catch (Exception e){
+                        log.error("getFeedDataForUser : " + e);
+                        return null;
+                    }
+
+                }
+                feedDataDTOList.add(feedDataDTO);
+            }
+            return feedDataDTOList;
+
+
+
+        }else{
+
+        }
+
+        return null;
+    }
 
 }

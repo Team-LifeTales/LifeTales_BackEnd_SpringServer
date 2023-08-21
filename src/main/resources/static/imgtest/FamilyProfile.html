@@ -9,7 +9,7 @@
 <button id="loadImageBtn">Load Image</button>
 <br>
 <img id="image" src="" alt="Family Profile Image">
-<div id="FailyInfo"></div>
+<div id="familyInfo"></div>
 
 <script>
     document.getElementById("loadImageBtn").addEventListener("click", function () {
@@ -18,7 +18,7 @@
 
     function getImage() {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "http://localhost:8080/test/familyData/1", true);
+        xhr.open("GET", "http://localhost:8080/test/familyData/neymar", true);
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 var response = JSON.parse(xhr.responseText);

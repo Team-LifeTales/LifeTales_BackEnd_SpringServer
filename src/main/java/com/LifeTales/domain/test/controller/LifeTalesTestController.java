@@ -2,6 +2,8 @@ package com.LifeTales.domain.test.controller;
 
 import com.LifeTales.domain.family.repository.DTO.FamilyDataDTO;
 import com.LifeTales.domain.family.service.FamilyService;
+import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
+import com.LifeTales.domain.feed.service.FeedService;
 import com.LifeTales.domain.test.domain.Test;
 import com.LifeTales.domain.test.repository.dto.TestDTO;
 import com.LifeTales.domain.test.service.LifeTalesTestService;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @Controller
@@ -26,12 +29,14 @@ public class LifeTalesTestController {
 
     private final UserService userService;
 
+    private final FeedService feedService;
     private final FamilyService familyService;
-    public LifeTalesTestController(ObjectMapper objectMapper, LifeTalesTestService lifeTalesTestService, UserService userService, FamilyService familyService) {
+    public LifeTalesTestController(ObjectMapper objectMapper, LifeTalesTestService lifeTalesTestService, UserService userService, FamilyService familyService, FeedService feedService) {
         this.objectMapper = objectMapper;
         this.lifeTalesTestService = lifeTalesTestService;
         this.userService = userService;
         this.familyService = familyService;
+        this.feedService = feedService;
     }
     @ResponseBody
     @GetMapping("/test/get/{name}")
@@ -87,7 +92,7 @@ public class LifeTalesTestController {
     @ResponseBody
     @GetMapping("/test/familyData/{nickname}")
     public ResponseEntity lifeTalesFamilyDataGetTest(@PathVariable String nickname) throws IOException {
-        log.info("lifeTalesUserDataGetTest >> id : {}" , nickname);
+        log.info("lifeTalesFamilyDataGetTest >> id : {}" , nickname);
         FamilyDataDTO familyDataDTO = familyService.getDataForFamily(nickname);
         if(familyDataDTO == null){
             log.info("null >> ");
@@ -99,9 +104,39 @@ public class LifeTalesTestController {
         }
 
     }
+    @ResponseBody
+    @GetMapping("/test/feedDataFamily/{nickname}")
+    public ResponseEntity lifeTalesFeedDataForFamilyGetTest(@PathVariable String nickname) throws IOException {
+        log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", nickname);
+        List<FeedDataDTO> feedDataDTO = feedService.getFeedDataForFamily(nickname);
+        if (feedDataDTO == null) {
+            log.info("null >> ");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+        } else {
+            String json = objectMapper.writeValueAsString(feedDataDTO);
+            log.info(json);
+            log.info("sucess");
+            return ResponseEntity.ok(json);
+        }
 
 
+    }
+
+    @ResponseBody
+    @GetMapping("/test/feedDataUser/{id}")
+    public ResponseEntity lifeTalesFeedDataForUserGetTest(@PathVariable String id) throws IOException {
+        log.info("lifeTalesFeedDataForUserGetTest >> id : {}", id);
+        List<FeedDataDTO> feedDataDTO = feedService.getFeedDataForUser(id);
+        if (feedDataDTO == null) {
+            log.info("null >> ");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+        } else {
+            String json = objectMapper.writeValueAsString(feedDataDTO);
+            log.info(json);
+            log.info("sucess");
+            return ResponseEntity.ok(json);
+        }
 
 
-
+    }
 }

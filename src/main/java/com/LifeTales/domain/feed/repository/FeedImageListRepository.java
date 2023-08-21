@@ -8,5 +8,5 @@ import java.util.List;
 public interface FeedImageListRepository extends JpaRepository<FeedImageList, Long> {
     boolean existsBySeq(Long seq);
 
-    List<FeedImageList> findBySeqContaining(Long seq);
+    List<FeedImageList> findByFeedSeq(Long feedSeq);
 }
