@@ -21,3 +21,9 @@ cloud:
     credentials:
       accessKey: #acesskey
       secretKey: #secrekey
+
+logging:
+  level:
+    org:
+      springframework:
+        security=DEBUG:
