@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Display Example</title>
+</head>
+<body>
+<button id="loadImageBtn">Load Image</button>
+<br>
+<img id="image" src="" alt="Family Profile Image">
+<div id="FailyInfo"></div>
+
+<script>
+    document.getElementById("loadImageBtn").addEventListener("click", function () {
+        getImage();
+    });
+
+    function getImage() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://localhost:8080/test/familyData/1", true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+                console.log("Response from server:", response);
+                var imageURL = response.profileIMG.httpRequest.uri; // Corrected image URL property
+                console.log("Image URL:", imageURL);
+                document.getElementById("image").src = imageURL;
+
+                // Display user information
+                var familyInfoElement = document.getElementById("familyInfo");
+                familyInfoElement.innerHTML = `
+                    <p>NickName: ${response.nickName}</p>
+                    <p>introduce: ${response.introduce}</p>
+                    <p>userSeq: ${response.userSeq}</p>
+                `;
+            }
+        };
+        xhr.send();
+    }
+</script>
+</body>
+</html>

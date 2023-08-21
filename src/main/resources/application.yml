@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    initialize: false
+    url: jdbc:mysql://127.0.0.1:3306/#dbName?useSSL=false&useUnicode=true&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true
+    username: #userName
+    password: #password
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        hbm2ddl.auto: update
+        format_sql: true
+
+cloud:
+  aws:
+    s3:
+      bucket: #bucket-name
+    stack.auto: false
+    region.static: ap-northeast-2
+    credentials:
+      accessKey: #acesskey
+      secretKey: #secrekey
