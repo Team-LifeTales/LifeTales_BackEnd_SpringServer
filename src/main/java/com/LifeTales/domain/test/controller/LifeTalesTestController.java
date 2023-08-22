@@ -3,6 +3,7 @@ package com.LifeTales.domain.test.controller;
 import com.LifeTales.domain.family.repository.DTO.FamilyDataDTO;
 import com.LifeTales.domain.family.service.FamilyService;
 import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
+import com.LifeTales.domain.feed.repository.DTO.FeedDetailDTO;
 import com.LifeTales.domain.feed.service.FeedService;
 import com.LifeTales.domain.test.domain.Test;
 import com.LifeTales.domain.test.repository.dto.TestDTO;
@@ -105,6 +106,23 @@ public class LifeTalesTestController {
 
     }
     @ResponseBody
+    @GetMapping("/test/family/{nickname}")
+    public ResponseEntity lifeTalesFamilyPage(@PathVariable String nickname) throws IOException {
+        log.info("lifeTalesFamilyDataGetTest >> id : {}" , nickname);
+        FamilyDataDTO familyDataDTO = familyService.getDataForFamily(nickname);
+        List<FeedDataDTO> feedDataDTO = feedService.getFeedDataForFamily(nickname);
+        familyDataDTO.setFeedDataDtos(feedDataDTO);
+        if(familyDataDTO == null){
+            log.info("null >> ");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+        }else{
+            String json = objectMapper.writeValueAsString(familyDataDTO);
+            log.info(json);
+            return ResponseEntity.ok(json);
+        }
+
+    }
+    @ResponseBody
     @GetMapping("/test/feedDataFamily/{nickname}")
     public ResponseEntity lifeTalesFeedDataForFamilyGetTest(@PathVariable String nickname) throws IOException {
         log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", nickname);
@@ -136,7 +154,20 @@ public class LifeTalesTestController {
             log.info("sucess");
             return ResponseEntity.ok(json);
         }
-
-
+    }
+    @ResponseBody
+    @GetMapping("/test/feedDetail/{seq}")
+    public ResponseEntity lifeTalesFeedDataDetailGet(@PathVariable Long seq) throws IOException {
+        log.info("lifeTalesFeedDataDetailGet>> seq : {}", seq);
+        FeedDetailDTO feedDetailDTO = feedService.getFeedDetail(seq);
+        if (feedDetailDTO == null) {
+            log.info("null >> ");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+        } else {
+            String json = objectMapper.writeValueAsString(feedDetailDTO);
+            log.info(json);
+            log.info("sucess");
+            return ResponseEntity.ok(json);
+        }
     }
 }

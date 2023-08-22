@@ -112,6 +112,7 @@ public class FamilyService {
             familyDataDTO.setUserSeq(familyData.getUserSeq());
             familyDataDTO.setIntroduce(familyData.getIntroduce());
             familyDataDTO.setNickName(familyData.getNickName());
+            familyDataDTO.setFeedDataDtos(null);
             //s3에 요청하기 전 확인하기
             if(familyData.getProfileIMG() != null){
                 log.info("getDataForUser S3 connect Start");

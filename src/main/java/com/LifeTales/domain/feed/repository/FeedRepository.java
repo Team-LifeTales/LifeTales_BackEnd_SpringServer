@@ -13,4 +13,6 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
     List<Feed> findByFamilySeq( Long familySeq);
 
     List<Feed> findByUserSeq( Long userSeq);
+
+    Feed findBySeq(Long seq);
 }
