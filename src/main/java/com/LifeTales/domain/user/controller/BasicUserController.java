@@ -16,7 +16,7 @@ import java.io.IOException;
 
 @Slf4j
 @RestController
-@RequestMapping("/users/user/basic")
+@RequestMapping("/api/v1/users/basic")
 public class BasicUserController {
     private final ObjectMapper objectMapper;
     private final UserService userService;
@@ -29,6 +29,15 @@ public class BasicUserController {
         this.uservalidator = uservalidator;
         this.userIdChecker = userIdChecker;
     }
+
+    @PostMapping("/login/")
+    public ResponseEntity<String> basicUserLogin(){
+        log.info("basicUserLogin >> ");
+
+        return ResponseEntity.ok("token");
+    }
+
+
 
     @PostMapping("/signUp/detail/")
     public ResponseEntity basicUserSignUp(@RequestBody UserSignUpDTO signUpData) {

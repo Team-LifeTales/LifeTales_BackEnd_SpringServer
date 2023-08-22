@@ -18,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/feeds/feed/basic")
+@RequestMapping("/api/v1/feed")
 public class BasicFeedController {
     private final ObjectMapper objectMapper;
     private final FeedService feedService;
