@@ -1,6 +1,7 @@
 package com.LifeTales.domain.user.controller;
 
 import com.LifeTales.common.User.UserIdChecker;
+import com.LifeTales.domain.user.repository.DTO.UserSignInDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
 import com.LifeTales.domain.user.service.UserService;
@@ -31,10 +32,11 @@ public class BasicUserController {
     }
 
     @PostMapping("/login/")
-    public ResponseEntity<String> basicUserLogin(){
-        log.info("basicUserLogin >> ");
+    public ResponseEntity<String> basicUserLogin(UserSignInDTO userSignInDTO){
+        log.info("basicUserLogin >> {}" , userSignInDTO.getId());
+        String token  = userService.login(userSignInDTO.getId() , userSignInDTO.getPassWord());
 
-        return ResponseEntity.ok("token");
+        return ResponseEntity.ok(token);
     }
 
 

@@ -1,3 +1,4 @@
+#db & jpa setting
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -12,6 +13,7 @@ spring:
         hbm2ddl.auto: update
         format_sql: true
 
+# AWS cloud Setting
 cloud:
   aws:
     s3:
@@ -22,8 +24,14 @@ cloud:
       accessKey: #acesskey
       secretKey: #secrekey
 
+# logging level setting
 logging:
   level:
     org:
       springframework:
         security=DEBUG:
+
+
+#jwt Token
+jwt:
+  Life-tales-secretKey : #tempKey..

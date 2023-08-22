@@ -7,6 +7,7 @@ import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
 import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.global.s3.RequestIMGService;
+import com.LifeTales.global.util.JwtUtil;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -36,13 +37,29 @@ public class UserService {
     @Autowired
     private final UserRepository userRepository;
     private final AmazonS3Client amazonS3Client;
-    @Value("${cloud.aws.s3.bucket}")
-    private String bucket;
     private final UserIdChecker userIdChecker;
 
     private final RequestIMGService imgService;
     @PersistenceContext
     private EntityManager entityManager;
+
+    //value
+
+    @Value("${cloud.aws.s3.bucket}")
+    private String bucket;
+
+    @Value("${jwt.Life-tales-secretKey}")
+    private String secretKey;
+
+    private Long expiredMs = 1000*60*60l; //1h
+
+
+    public String login(String id , String password){
+        //인증..
+        return JwtUtil.createJwtToken(id , secretKey,expiredMs);
+    }
+
+
 
     public String user_signUp_service(@RequestBody UserSignUpDTO userSignUpdata){
         try {
