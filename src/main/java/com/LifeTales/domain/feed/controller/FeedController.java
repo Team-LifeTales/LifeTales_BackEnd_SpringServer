@@ -29,8 +29,8 @@ public class FeedController {
         this.feedUploadValidator = feedUploadValidator;
     }
 
-    @PostMapping("/upload/detail/")
-    public ResponseEntity basicFeedUpload( @RequestParam("userSeq") Long userSeq,
+    @PostMapping("/upload/feed/")
+    public ResponseEntity FeedUpload( @RequestParam("userSeq") Long userSeq,
                                            @RequestParam("familySeq") Long familySeq,
                                            @RequestParam(value = "uploadIMG", required = false) List<MultipartFile> uploadIMGs,
                                            @RequestParam("content") String content) throws IOException {

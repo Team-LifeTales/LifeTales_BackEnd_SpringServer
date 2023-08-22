@@ -1,5 +1,6 @@
 package com.LifeTales.domain.user.domain;
 
+import com.LifeTales.domain.family.domain.Family;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -15,7 +16,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(
         name = "User",
-        schema = "LifeTales_Spring_Server"
+        schema = "LifeTales_Spring_Server",
+        uniqueConstraints = @UniqueConstraint(columnNames = "ID")
 )
 @Data
 public class User {
@@ -23,7 +25,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="SEQ")
     private Long seq;
-    @Column(name = "ID" , nullable = false , length = 30)
+    @Column(name = "ID" , nullable = false , length = 30 , unique = true)
     private String id;
     @Column(name = "PWD" , nullable = false , length = 30)
     private String pwd;
@@ -33,6 +35,15 @@ public class User {
     private String nickName;
     @Column(name = "BIRTHDAY" , nullable = false )
     private LocalDateTime birthDay;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="ROLE" , nullable = false)
+    private UserRole role;
+
+    @ManyToOne
+    @JoinColumn(name = "FAMILY_SEQ")
+    private Family familySeq;
+
     @Column(name = "PHONENUMBER" , nullable = false , length = 11)
     private String phoneNumber;
 

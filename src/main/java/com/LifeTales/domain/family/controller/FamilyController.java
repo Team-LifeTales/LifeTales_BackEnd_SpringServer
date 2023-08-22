@@ -29,8 +29,8 @@ public class FamilyController {
         this.familyNicknameChecker = familyNicknameChecker;
     }
 
-    @PostMapping("/signUp/detail/")
-    public ResponseEntity basicFamilySignUp(@RequestParam("nickname") String nickname,
+    @PostMapping("/signUp/createFamily/")
+    public ResponseEntity FamilySignUp(@RequestParam("nickname") String nickname,
                                             @RequestParam(value = "profileIMG", required = false) MultipartFile profileIMG,
                                             @RequestParam("introduce") String introduce,
                                             @RequestParam("userSeq") Long userSeq) throws IOException {
