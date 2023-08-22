@@ -1,6 +1,7 @@
 package com.LifeTales.domain.user.controller;
 
 import com.LifeTales.common.User.UserIdChecker;
+import com.LifeTales.domain.user.repository.DTO.UserSignInDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
 import com.LifeTales.domain.user.service.UserService;
@@ -16,7 +17,7 @@ import java.io.IOException;
 
 @Slf4j
 @RestController
-@RequestMapping("/users/user/basic")
+@RequestMapping("/api/v1/users/basic")
 public class BasicUserController {
     private final ObjectMapper objectMapper;
     private final UserService userService;
@@ -29,6 +30,16 @@ public class BasicUserController {
         this.uservalidator = uservalidator;
         this.userIdChecker = userIdChecker;
     }
+
+    @PostMapping("/login/")
+    public ResponseEntity<String> basicUserLogin(@RequestBody UserSignInDTO userSignInDTO){
+        log.info("basicUserLogin >> {}" , userSignInDTO.getId());
+        String token  = userService.login(userSignInDTO.getId() , userSignInDTO.getPwd());
+
+        return ResponseEntity.ok(token);
+    }
+
+
 
     @PostMapping("/signUp/detail/")
     public ResponseEntity basicUserSignUp(@RequestBody UserSignUpDTO signUpData) {
