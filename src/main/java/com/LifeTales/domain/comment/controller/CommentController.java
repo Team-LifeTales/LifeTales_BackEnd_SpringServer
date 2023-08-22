@@ -1,36 +1,28 @@
 package com.LifeTales.domain.comment.controller;
 
-import com.LifeTales.common.User.FamilyNicknameChecker;
 import com.LifeTales.domain.comment.repository.DTO.CommentUploadDTO;
 import com.LifeTales.domain.comment.service.CommentService;
-import com.LifeTales.domain.family.repository.DTO.FamilySignUpDTO;
-import com.LifeTales.domain.family.service.FamilyService;
-import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
-import com.LifeTales.global.Validator.FamilySignUpValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 @Slf4j
 @RestController
-@RequestMapping("/comments/comment/basic")
-public class BasicCommentController {
+@RequestMapping("/api/v1/comment")
+public class CommentController {
     private final ObjectMapper objectMapper;
     private final CommentService commentService;
-    public BasicCommentController(ObjectMapper objectMapper, CommentService commentService) {
+    public CommentController(ObjectMapper objectMapper, CommentService commentService) {
         this.objectMapper = objectMapper;
         this.commentService = commentService;
 
     }
 
-    @PostMapping("/Upload/detail/")
-    public ResponseEntity basicCommentUpload(@RequestBody CommentUploadDTO commentUploadDTO) {
-        log.info("basicCommentUpload Start - need Data \nuser : {} , feed : {}, content : {} , " ,commentUploadDTO.getUserSeq(),commentUploadDTO.getFeedSeq(), commentUploadDTO.getContent());
+    @PostMapping("/upload/master/")
+    public ResponseEntity masterCommentUpload(@RequestBody CommentUploadDTO commentUploadDTO) {
+        log.info("masterCommentUpload Start - need Data \nuser : {} , feed : {}, content : {} , " ,commentUploadDTO.getUserSeq(),commentUploadDTO.getFeedSeq(), commentUploadDTO.getContent());
 
         log.info("CommentUpload service logic Start");
         String return_text = commentService.comment_upload_service(commentUploadDTO);

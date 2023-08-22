@@ -1,9 +1,7 @@
 package com.LifeTales.domain.feed.controller;
 
-import com.LifeTales.domain.family.repository.DTO.FamilySignUpDTO;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.service.FeedService;
-import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.global.Validator.FeedUploadValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -19,20 +17,20 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/feed")
-public class BasicFeedController {
+public class FeedController {
     private final ObjectMapper objectMapper;
     private final FeedService feedService;
     private final FeedUploadValidator feedUploadValidator;
 
     //private final FeedNicknameChecker familyNicknameChecker;
-    public BasicFeedController(ObjectMapper objectMapper, FeedService feedService, FeedUploadValidator feedUploadValidator) {
+    public FeedController(ObjectMapper objectMapper, FeedService feedService, FeedUploadValidator feedUploadValidator) {
         this.objectMapper = objectMapper;
         this.feedService = feedService;
         this.feedUploadValidator = feedUploadValidator;
     }
 
-    @PostMapping("/upload/detail/")
-    public ResponseEntity basicFeedUpload( @RequestParam("userSeq") Long userSeq,
+    @PostMapping("/upload/feed/")
+    public ResponseEntity FeedUpload( @RequestParam("userSeq") Long userSeq,
                                            @RequestParam("familySeq") Long familySeq,
                                            @RequestParam(value = "uploadIMG", required = false) List<MultipartFile> uploadIMGs,
                                            @RequestParam("content") String content) throws IOException {

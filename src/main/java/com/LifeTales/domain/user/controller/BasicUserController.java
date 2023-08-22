@@ -4,6 +4,7 @@ import com.LifeTales.common.User.UserIdChecker;
 import com.LifeTales.domain.user.repository.DTO.UserSignInDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
+import com.LifeTales.domain.user.repository.DTO.UserSignUpStep3DTO;
 import com.LifeTales.domain.user.service.UserService;
 import com.LifeTales.global.Validator.UserSignUpValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -133,5 +134,16 @@ public class BasicUserController {
 
     }
 
+    @PostMapping("/signUp/Join_family/")
+    public ResponseEntity basicUserSignUpJoinFamily(@RequestBody UserSignUpStep3DTO signUpData){
+        log.info("basicUserSignUpJoinFamily >> {}" ,signUpData.getId());
+
+        String return_text = userService.user_signUp_step3_service(signUpData);
+        if(return_text.equals("Success")){
+            return ResponseEntity.ok("Success");
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("fail");
+        }
+    }
 
 }

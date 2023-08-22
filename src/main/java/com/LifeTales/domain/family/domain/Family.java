@@ -32,7 +32,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(
         name = "Family",
-        schema = "LifeTales_Spring_Server"
+        schema = "LifeTales_Spring_Server",
+        uniqueConstraints = @UniqueConstraint(columnNames = "NICKNAME")
 )
 @Data
 public class Family {
@@ -40,7 +41,7 @@ public class Family {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="SEQ")
     private Long seq;
-    @Column(name = "NICKNAME" , nullable = false , length = 10)
+    @Column(name = "NICKNAME" , nullable = false , length = 10 , unique = true)
     private String nickName;
 
     @Column(name = "PROFILEIMG" , nullable = true , length = 100)

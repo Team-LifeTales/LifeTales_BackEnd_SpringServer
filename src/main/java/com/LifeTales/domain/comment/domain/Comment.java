@@ -25,8 +25,16 @@ public class Comment {
     @Column(name="SEQ")
     private Long seq;
 
-    @Column(name = "CONTENT" , nullable = true , length = 100)
+    @Column(name = "CONTENT" , nullable = false , length = 100)
     private String content;
+
+    @ManyToOne
+    @JoinColumn(name = "master_comment_seq")
+    private Comment masterComment;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="ROLE" , nullable = false)
+    private CommentRole role;
 
     @Column(name = "USERSEQ" , nullable = false)
     private Long userSeq;

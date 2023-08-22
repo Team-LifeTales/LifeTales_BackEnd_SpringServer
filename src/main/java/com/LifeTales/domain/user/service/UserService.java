@@ -1,10 +1,14 @@
 package com.LifeTales.domain.user.service;
 
 import com.LifeTales.common.User.UserIdChecker;
+import com.LifeTales.domain.family.domain.Family;
+import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.user.domain.User;
+import com.LifeTales.domain.user.domain.UserRole;
 import com.LifeTales.domain.user.repository.DTO.UserDataDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
+import com.LifeTales.domain.user.repository.DTO.UserSignUpStep3DTO;
 import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.global.s3.RequestIMGService;
 import com.LifeTales.global.util.JwtUtil;
@@ -36,6 +40,9 @@ public class UserService {
     //user Service
     @Autowired
     private final UserRepository userRepository;
+    private final FamilyRepository familyRepository;
+
+
     private final AmazonS3Client amazonS3Client;
     private final UserIdChecker userIdChecker;
 
@@ -91,6 +98,7 @@ public class UserService {
                             .nickName(userSignUpdata.getNickName())
                             .birthDay(userSignUpdata.getBirthDay().atStartOfDay())
                             .phoneNumber(userSignUpdata.getPhoneNumber())
+                            .role(UserRole.TEMP)
                             .build()
             );
             return "Success";
@@ -149,6 +157,89 @@ public class UserService {
         }else{
             //없는 경우
             return "fail - s3 upload fail";
+        }
+
+    }
+
+    public String user_signUp_step3_service(UserSignUpStep3DTO userData){
+        log.info("user_signUp_step3_service >> userId {}" , userData.getId());
+        /**
+         * to do
+         * userId check (exist)
+         * family Seq check (exist)
+         * userRole Check (current)
+         * merge
+         * return
+         */
+
+        if(userRepository.existsById(userData.getId())){
+            // id 존재하는경우
+            log.info("user_signUp_step3_service >> idCheck __ success");
+            if(familyRepository.existsBySeq(userData.getFamilySeq())){
+                //familySeq 가 존재하는경우
+                log.info("user_signUp_step3_service >> familySeqCheck __ success");
+                if(userData.getUserRole().equals("leader") || userData.getUserRole().equals("member")){
+                    //userRole Check (current)
+                    log.info("user_signUp_step3_service >> roleCheck __ success");
+                    //set Seq Number
+                    User user  = userRepository.findSeqById(userData.getId());
+                    Long userSeq = user.getSeq();
+
+                    //Start db merge
+                    user_signup_step3_db_service(userData.getFamilySeq() , userData.getUserRole() ,userSeq);
+                    return "Success";
+                    //end db merge
+
+                }else{
+                    log.info("user_signUp_step3_service >> roleCheck __ fail");
+                    return "roleCheck Fail";
+                }
+
+            }else{
+                //없음
+                log.info("user_signUp_step3_service >> familySeqCheck __ fail");
+                return "FamilyCheck Fail";
+            }
+
+
+        }else{
+            //존재하지 않음
+            log.info("user_signUp_step3_service >> idCheck __ fail");
+            return "IdCheck Fail";
+        }
+
+    }
+    private boolean user_signup_step3_db_service(long familySeq , String userRole , Long userSeq){
+        log.info("user_signup_step3_db_service Start >> ");
+        try {
+            User user = entityManager.find(User.class , userSeq);
+            Family family = entityManager.find(Family.class , familySeq);
+
+            if(user !=null){
+                //user mergeSetting Start
+                user.setFamilySeq(family);
+                if(userRole.equals("leader")){
+                    user.setRole(UserRole.FAMILY_LEADER);
+                }else{
+                    user.setRole(UserRole.FAMILY_MEMBER);
+                }
+                //user mergeSetting End
+                //user merge Start
+                try {
+                    entityManager.merge(user);
+                    return true;
+                }catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
+                }
+                //user merge End
+            }
+            else{
+                return false;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return false;
         }
 
     }
