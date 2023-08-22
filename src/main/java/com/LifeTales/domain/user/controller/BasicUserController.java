@@ -32,9 +32,9 @@ public class BasicUserController {
     }
 
     @PostMapping("/login/")
-    public ResponseEntity<String> basicUserLogin(UserSignInDTO userSignInDTO){
+    public ResponseEntity<String> basicUserLogin(@RequestBody UserSignInDTO userSignInDTO){
         log.info("basicUserLogin >> {}" , userSignInDTO.getId());
-        String token  = userService.login(userSignInDTO.getId() , userSignInDTO.getPassWord());
+        String token  = userService.login(userSignInDTO.getId() , userSignInDTO.getPwd());
 
         return ResponseEntity.ok(token);
     }

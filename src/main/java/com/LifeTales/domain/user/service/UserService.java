@@ -56,7 +56,27 @@ public class UserService {
 
     public String login(String id , String password){
         //인증..
-        return JwtUtil.createJwtToken(id , secretKey,expiredMs);
+        /**
+         * do
+         * id 존재여부...
+         * id -> password 검증..
+         */
+        if(userRepository.existsById(id)){
+            //존재하는경우...
+            User user = userRepository.findById(id);
+//            log.info("들어온값 id {} , password {}" , id , password);
+//            log.info("찾은값 id {} , password {}" , id );
+            //검증...
+            if(user.getPwd().equals(password)){
+                log.info("login Service >> {} .. success" ,  id);
+                return JwtUtil.createJwtToken(id , secretKey,expiredMs);
+            }else{
+                return "password is not exist";
+            }
+        }else{
+            //없는경우...
+            return "id is not exist";
+        }
     }
 
 

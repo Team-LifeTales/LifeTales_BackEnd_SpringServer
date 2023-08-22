@@ -10,7 +10,7 @@ import java.time.LocalDate;
 public class UserSignInDTO {
 
     private String id;
-    private String passWord;
+    private String pwd;
 
 
 }
