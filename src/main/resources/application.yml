@@ -19,10 +19,10 @@ cloud:
     s3:
       bucket: #bucket-name
     stack.auto: false
-    region.static: apgit-northeast-2
+    region.static: ap-northeast-2
     credentials:
       accessKey: #acesskey
-      secretKey: #secrekey 
+      secretKey: #secrekey
 
 # logging level setting
 logging:
