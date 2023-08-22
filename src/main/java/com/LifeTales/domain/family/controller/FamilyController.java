@@ -1,15 +1,9 @@
 package com.LifeTales.domain.family.controller;
 
 import com.LifeTales.common.User.FamilyNicknameChecker;
-import com.LifeTales.common.User.UserIdChecker;
 import com.LifeTales.domain.family.repository.DTO.FamilySignUpDTO;
 import com.LifeTales.domain.family.service.FamilyService;
-import com.LifeTales.domain.user.repository.DTO.UserSignInDTO;
-import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
-import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
-import com.LifeTales.domain.user.service.UserService;
 import com.LifeTales.global.Validator.FamilySignUpValidator;
-import com.LifeTales.global.Validator.UserSignUpValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,14 +15,14 @@ import java.io.IOException;
 
 @Slf4j
 @RestController
-@RequestMapping("/familes/family/basic")
-public class BasicFamilyController {
+@RequestMapping("/api/v1/family")
+public class FamilyController {
     private final ObjectMapper objectMapper;
     private final FamilyService familyService;
     private final FamilySignUpValidator familyValidator;
 
     private final FamilyNicknameChecker familyNicknameChecker;
-    public BasicFamilyController(ObjectMapper objectMapper, FamilyService familyService, FamilySignUpValidator familyValidator, FamilyNicknameChecker familyNicknameChecker) {
+    public FamilyController(ObjectMapper objectMapper, FamilyService familyService, FamilySignUpValidator familyValidator, FamilyNicknameChecker familyNicknameChecker) {
         this.objectMapper = objectMapper;
         this.familyService = familyService;
         this.familyValidator = familyValidator;
