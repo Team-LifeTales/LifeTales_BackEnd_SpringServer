@@ -18,7 +18,8 @@ public class AuthenticationConfig {
                 .csrf().disable() //(!)나중에 풀어줄것
                 .cors().and()
                 .authorizeRequests()
-                .antMatchers("/api/v1/users/basic/login/" , "/api/v1/users/basic/signUp/detail/" , "/api/v1/users/basic/signUp/profile_introduce/").permitAll()
+                .antMatchers( "/api/v1/users/basic/login/" , "/api/v1/users/basic/signUp/detail/" , "/api/v1/users/basic/signUp/profile_introduce/").permitAll()
+                //"/api/v1/**"
                 .antMatchers(HttpMethod.POST , "/api/v1/feed/**").authenticated()
                 .and()
                 .sessionManagement()

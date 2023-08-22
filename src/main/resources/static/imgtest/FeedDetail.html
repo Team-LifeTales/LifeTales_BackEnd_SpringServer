@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Display Example</title>
+</head>
+<body>
+<button id="loadImageBtn">Load Image</button>
+<br>
+<img id="image" src="" alt="Family Feed">
+<div id="feedDetail"></div>
+
+<script>
+    document.getElementById("loadImageBtn").addEventListener("click", function () {
+        getImage();
+    });
+
+    function getImage() {
+        var feedDetailElement = document.getElementById("feedDetail");
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", "http://localhost:8080/test/feedDetail/2", true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+                console.log("Response from server:", response);
+                var feedSeq = response.feedSeq;
+                var userSeq = response.userSeq;
+                var isCreated = response.isCreated;
+                var content = response.content;
+                var feedImages = response.feedIMGs;
+                // feedIMG 객체에서 uri 속성 추출
+                feedImages.forEach(function (item) {
+
+                    var imageURL = item.httpRequest.uri; // Corrected image URL property
+
+                    // 이미지 추가
+                    var imageElement = document.createElement("img");
+                    imageElement.src = imageURL;
+                    feedDetailElement.appendChild(imageElement);
+
+                });
+
+                // 사용자 정보 추가
+                var feedContentElement = document.createElement("div");
+                feedContentElement.innerHTML = `
+                        <p>Feed Sequence: ${feedSeq}</p>
+                        <p>User Sequence: ${userSeq}</p>
+                        <p>Feed Content: ${content}</p>
+                        <p>Feed isCreated: ${isCreated}</p>
+                    `;
+                feedDetailElement.appendChild(feedContentElement);
+            }
+        };
+        xhr.send();
+    }
+</script>
+</body>
+</html>
