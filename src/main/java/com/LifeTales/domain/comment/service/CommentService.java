@@ -2,6 +2,7 @@ package com.LifeTales.domain.comment.service;
 import com.LifeTales.domain.comment.domain.Comment;
 import com.LifeTales.domain.comment.domain.CommentRole;
 import com.LifeTales.domain.comment.repository.DTO.CommentUploadDTO;
+import com.LifeTales.domain.comment.repository.DTO.MasterCommentReadDTO;
 import com.LifeTales.domain.comment.repository.MasterCommentRepository;
 import com.LifeTales.domain.comment.repository.SlaveCommentRepository;
 import com.LifeTales.domain.feed.domain.Feed;
@@ -16,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +44,42 @@ public class CommentService {
          * 유저 NickName , profile
          * comment 에 대한 내용 , 최종일 , slave 댓글이 있는지에 대한 여부..
          */
+        log.info("feedFinder Start");
+        if(feedRepository.existsBySeq(feedSeq)){
+            //feed exist
+
+            List<MasterCommentReadDTO> returnList = new ArrayList<>();
+
+
+            String userProfile;
+            String userNickName;
+            String commentContent;
+            Long existSalve;
+            LocalDateTime updateTime;
+
+            Feed feedData = feedRepository.findBySeq(feedSeq);
+            List<Comment> commentList = masterCommentRepository.findByFeedSeqAndIsDELETED(feedData , false);
+            for(Comment commentData : commentList){
+                userNickName = commentData.getUserId().getNickName();
+                userProfile = commentData.getUserId().getProfileIMG();
+                commentContent = commentData.getContent();
+                existSalve = commentData.getExistSalve();
+                updateTime = commentData.getIsUpdated();
+
+                MasterCommentReadDTO masterCommentReadDTO = new MasterCommentReadDTO();
+                masterCommentReadDTO.setUserProfile(userProfile);
+                masterCommentReadDTO.setUserNickName(userNickName);
+                masterCommentReadDTO.setCommentContent(commentContent);
+                masterCommentReadDTO.setExistSalve(existSalve);
+                masterCommentReadDTO.setIsUpdated(updateTime);
+
+                returnList.add(masterCommentReadDTO);
+            }
+            //printCommentList(commentList); //확인용임
+            printReturnList(returnList); //확인용임
+        }else{
+            //feed not exist
+        }
             return  null;
     }
 
@@ -86,7 +125,12 @@ public class CommentService {
                     Comment masterComment = masterCommentRepository.findBySeq(commentUploadDTO.getMasterCommentSeq());
                     String text =  upload_slave_comment_db_service(commentUploadDTO , user , feed , masterComment);
 
-                    return "Success";
+                    if(text.equals("Success")){
+                        return "Success";
+                    }else{
+                        return text;
+                    }
+
                 }else{
                     //feed 없음
                     return "feed is not exist";
@@ -176,5 +220,29 @@ public class CommentService {
             return "RuntimeException";
         }
     }
+    public void printCommentList(List<Comment> commentList) {
+        for (Comment comment : commentList) {
+            System.out.println("Comment Seq: " + comment.getSeq());
+            System.out.println("Content: " + comment.getContent());
+            System.out.println("Role: " + comment.getRole());
+            System.out.println("Exist Slave: " + comment.getExistSalve());
+            System.out.println("User ID: " + comment.getUserId().getId());
+            System.out.println("Is Created: " + comment.getIsCreated());
+            System.out.println("Is Updated: " + comment.getIsUpdated());
+            System.out.println("Is Deleted: " + comment.isDELETED());
+            System.out.println("---------------------------");
+        }
+    }
+    public void printReturnList(List<MasterCommentReadDTO> returnList) {
+        for (MasterCommentReadDTO dto : returnList) {
+            System.out.println("User Profile: " + dto.getUserProfile());
+            System.out.println("User NickName: " + dto.getUserNickName());
+            System.out.println("Comment Content: " + dto.getCommentContent());
+            System.out.println("Exist Slave: " + dto.getExistSalve());
+            System.out.println("Update Time: " + dto.getIsUpdated());
+            System.out.println("---------------------------");
+        }
+    }
+
 
 }

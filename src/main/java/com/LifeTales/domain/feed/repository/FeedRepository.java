@@ -2,6 +2,7 @@ package com.LifeTales.domain.feed.repository;
 
 import com.LifeTales.domain.feed.domain.Feed;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -15,4 +16,6 @@ public interface FeedRepository extends JpaRepository<Feed, Long> {
     List<Feed> findByUserSeq( Long userSeq);
 
     Feed findBySeq(Long seq);
+
+
 }
