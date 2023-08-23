@@ -57,15 +57,26 @@ public class CommentService {
 
             if(role.equals(CommentRole.MASTER_COMMENT)){
                 //master Comment
-                if(upload_master_comment_db_service(commentUploadDTO , user , feed).equals("Success")){
+                String text = upload_master_comment_db_service(commentUploadDTO , user , feed);
+                if(text.equals("Success")){
                     return "Success";
                 }else{
-                    return "fail Upload";
+                    return text;
                 }
 
             }else{
                 //slave Comment
-                return "Success";
+                if(masterCommentRepository.existsById(commentUploadDTO.getMasterCommentSeq())){
+                    //feed 존재
+                    Comment masterComment = masterCommentRepository.findBySeq(commentUploadDTO.getMasterCommentSeq());
+                    String text =  upload_slave_comment_db_service(commentUploadDTO , user , feed , masterComment);
+
+                    return "Success";
+                }else{
+                    //feed 없음
+                    return "feed is not exist";
+                }
+
             }
         }else{
             //refuse comment
@@ -116,6 +127,31 @@ public class CommentService {
             return "RuntimeException";
         }
     }
+    private String upload_slave_comment_db_service(CommentUploadDTO commentUploadDTO , User user , Feed feed , Comment masterComment){
+        try{
+            slaveCommentRepository.save(
+                    Comment.builder()
+                            .content(commentUploadDTO.getContent())
+                            .role(commentUploadDTO.getRole())
+                            .userId(user)
+                            .feedSeq(feed)
+                            .masterComment(masterComment)
+                            .build()
+            );
+            return "Success";
+        }catch (DataAccessException ex) {
+            // 데이터베이스 예외 처리
+            log.error("데이터베이스 예외 발생", ex);
+            // 다른 처리 로직 추가
 
+            return "DataAccessException";
+        } catch (RuntimeException ex) {
+            // 런타임 예외 처리
+            log.error("런타임 예외 발생", ex);
+            // 다른 처리 로직 추가
+
+            return "RuntimeException";
+        }
+    }
 
 }
