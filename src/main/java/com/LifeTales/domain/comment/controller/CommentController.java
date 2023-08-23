@@ -20,9 +20,9 @@ public class CommentController {
 
     }
 
-    @PostMapping("/upload/master/")
-    public ResponseEntity masterCommentUpload(@RequestBody CommentUploadDTO commentUploadDTO) {
-        log.info("masterCommentUpload Start - need Data \nuser : {} , feed : {}, content : {} , " ,commentUploadDTO.getUserSeq(),commentUploadDTO.getFeedSeq(), commentUploadDTO.getContent());
+    @PostMapping("/upload/comment/")
+    public ResponseEntity CommentUpload(@RequestBody CommentUploadDTO commentUploadDTO) {
+        log.info("CommentUpload Start - need Data \nuser : {} , feed : {}, content : {} , " ,commentUploadDTO.getUserId(),commentUploadDTO.getFeedSeq(), commentUploadDTO.getContent());
 
         log.info("CommentUpload service logic Start");
         String return_text = commentService.comment_upload_service(commentUploadDTO);
@@ -30,19 +30,19 @@ public class CommentController {
 
         ResponseEntity<String> responseEntity;
         if ("Success".equals(return_text)) {
-            log.info("CommentUplaod service Success , {}", commentUploadDTO.getUserSeq());
+            log.info("CommentUplaod service Success , {}", commentUploadDTO.getUserId());
             // 댓글 업로드 성공시 처리
-            responseEntity = ResponseEntity.ok("signUp Success");
+            responseEntity = ResponseEntity.ok("Comment Upload Success");
         } else if ("DataAccessException".equals(return_text)) {
-            log.info("CommentUplaod service DataAccessException , {}", commentUploadDTO.getUserSeq());
+            log.info("CommentUplaod service DataAccessException , {}", commentUploadDTO.getUserId());
             // 데이터베이스 예외 발생한 경우 처리
             responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("DataAccessException");
         } else if ("RuntimeException".equals(return_text)) {
-            log.info("CommentUplaod service RuntimeException , {}", commentUploadDTO.getUserSeq());
+            log.info("CommentUplaod service RuntimeException , {}", commentUploadDTO.getUserId());
             // 런타임 예외 발생한 경우 처리
             responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("RuntimeException");
         } else {
-            log.info("CommentUplaod service don't Know Error , Please contact about Developer, {}", commentUploadDTO.getUserSeq());
+            log.info("CommentUplaod service don't Know Error , Please contact about Developer, {}", commentUploadDTO.getUserId());
             // 기타 예외나 다른 경우 처리
             responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("don't Know Error");
         }
