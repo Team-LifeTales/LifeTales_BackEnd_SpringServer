@@ -1,6 +1,7 @@
 package com.LifeTales.domain.comment.domain;
 
-import com.LifeTales.domain.family.repository.DTO.FamilySearchDTO;
+import com.LifeTales.domain.feed.domain.Feed;
+import com.LifeTales.domain.user.domain.User;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -28,19 +29,21 @@ public class Comment {
     @Column(name = "CONTENT" , nullable = false , length = 100)
     private String content;
 
-    @ManyToOne
-    @JoinColumn(name = "master_comment_seq")
-    private Comment masterComment;
-
     @Enumerated(EnumType.STRING)
     @Column(name="ROLE" , nullable = false)
     private CommentRole role;
 
-    @Column(name = "USERSEQ" , nullable = false)
-    private Long userSeq;
+    @ManyToOne
+    @JoinColumn(name = "MASTER_COMMENT_SEQ")
+    private Comment masterComment;
 
-    @Column(name = "FeedSEQ" , nullable = false)
-    private Long feedSeq;
+    @ManyToOne
+    @JoinColumn(name = "USER_ID")
+    private User userId;
+
+    @ManyToOne
+    @JoinColumn(name = "FEED_SEQ")
+    private Feed feedSeq;
 
     @Column(name = "IS_CREATED" , nullable = false)
     @CreationTimestamp
