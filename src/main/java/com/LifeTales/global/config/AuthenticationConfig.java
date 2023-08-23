@@ -18,9 +18,9 @@ public class AuthenticationConfig {
                 .csrf().disable() //(!)나중에 풀어줄것
                 .cors().and()
                 .authorizeRequests()
-                .antMatchers( "/api/**", "/api/v1/users/basic/login/" , "/api/v1/users/basic/signUp/detail/" , "/api/v1/users/basic/signUp/profile_introduce/").permitAll()
+                .antMatchers( "/api/v1/users/basic/login/" , "/api/v1/users/basic/signUp/detail/" , "/api/v1/users/basic/signUp/profile_introduce/").permitAll()
                 //"/api/v1/**"
-                //.antMatchers(HttpMethod.POST , "/api/v1/feed/**").authenticated()
+                .antMatchers(HttpMethod.POST , "/api/v1/feed/**").authenticated()
                 .and()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // jwt 사용하는경우 이렇게 하는거라고함
