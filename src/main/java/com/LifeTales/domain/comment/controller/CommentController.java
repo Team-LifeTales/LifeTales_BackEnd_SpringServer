@@ -54,5 +54,12 @@ public class CommentController {
 
 
     }
+    @GetMapping("/read/MasterComment/{feedSeq}/")
+    public ResponseEntity MasterCommentListRead(Long feedSeq){
+        log.info("MasterCommentList Read Controller Start >>  {}" , feedSeq);
+
+        return null;
+    }
+
 
 }

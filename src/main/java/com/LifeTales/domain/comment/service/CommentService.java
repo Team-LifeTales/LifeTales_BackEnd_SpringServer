@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -31,8 +32,22 @@ public class CommentService {
     private final MasterCommentRepository masterCommentRepository;
     private final SlaveCommentRepository slaveCommentRepository;
 
+    public List<String> master_comment_read_service(Long feedSeq){
+        /**
+         * to do
+         * feed 존재여부..
+         * comment 조회 - 해당 피드에 있는 master comment들에 대한 리스트
+         * 주어야할 정보 .. 댓글을 단
+         * 유저 NickName , profile
+         * comment 에 대한 내용 , 최종일 , slave 댓글이 있는지에 대한 여부..
+         */
+            return  null;
+    }
 
-    public String comment_upload_service(@RequestBody CommentUploadDTO commentUploadDTO){
+
+
+
+    public String comment_upload_service(CommentUploadDTO commentUploadDTO){
         /**
          * do
          * feed 존재여부..
@@ -101,7 +116,7 @@ public class CommentService {
         }
 
     }
-
+    
     private String upload_master_comment_db_service(CommentUploadDTO commentUploadDTO , User user , Feed feed){
         try {
                 masterCommentRepository.save(
@@ -110,8 +125,11 @@ public class CommentService {
                                 .role(commentUploadDTO.getRole())
                                 .userId(user)
                                 .feedSeq(feed)
+                                .existSalve(0L)
                                 .build()
                 );
+
+
             return "Success";
         } catch (DataAccessException ex) {
             // 데이터베이스 예외 처리
@@ -138,6 +156,11 @@ public class CommentService {
                             .masterComment(masterComment)
                             .build()
             );
+            //master 댓글 ++
+            // 여기서 masterComment의 existSalve 값을 업데이트
+            masterComment.setExistSalve(masterComment.getExistSalve() + 1);
+            masterCommentRepository.save(masterComment);
+
             return "Success";
         }catch (DataAccessException ex) {
             // 데이터베이스 예외 처리

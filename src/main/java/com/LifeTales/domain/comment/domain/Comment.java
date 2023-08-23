@@ -32,10 +32,14 @@ public class Comment {
     @Enumerated(EnumType.STRING)
     @Column(name="ROLE" , nullable = false)
     private CommentRole role;
-
+    
+    //slave Comment 만 사용
     @ManyToOne
     @JoinColumn(name = "MASTER_COMMENT_SEQ")
-    private Comment masterComment;
+    private Comment masterComment; 
+    //master Comment 만 사용
+    @Column(name = "EXIST_SLAVE" , nullable = true)
+    private Long existSalve;
 
     @ManyToOne
     @JoinColumn(name = "USER_ID")
