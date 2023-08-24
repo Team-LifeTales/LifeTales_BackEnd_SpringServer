@@ -13,20 +13,22 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
+import static org.springframework.data.jpa.domain.AbstractAuditable_.createdDate;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 @Transactional
 public class CommentService {
+    private static final int PAGE_POST_COUNT = 10;
     @Autowired
     private final FeedRepository feedRepository;
     private final UserRepository userRepository;
@@ -35,7 +37,7 @@ public class CommentService {
     private final MasterCommentRepository masterCommentRepository;
     private final SlaveCommentRepository slaveCommentRepository;
 
-    public List<String> master_comment_read_service(Long feedSeq){
+    public Page<MasterCommentReadDTO> master_comment_read_service(Long feedSeq , int pageNum , Pageable pageable){
         /**
          * to do
          * feed 존재여부..
@@ -46,41 +48,37 @@ public class CommentService {
          */
         log.info("feedFinder Start");
         if(feedRepository.existsBySeq(feedSeq)){
+            String orderCriteria = "isUpdated";
+
+            Sort sort = Sort.by(
+                    Sort.Order.desc(orderCriteria)
+            );
+
+            pageable = PageRequest.of(pageNum, PAGE_POST_COUNT, sort);
+
+
             //feed exist
-
-            List<MasterCommentReadDTO> returnList = new ArrayList<>();
-
-
-            String userProfile;
-            String userNickName;
-            String commentContent;
-            Long existSalve;
-            LocalDateTime updateTime;
-
             Feed feedData = feedRepository.findBySeq(feedSeq);
-            List<Comment> commentList = masterCommentRepository.findByFeedSeqAndIsDELETED(feedData , false);
-            for(Comment commentData : commentList){
-                userNickName = commentData.getUserId().getNickName();
-                userProfile = commentData.getUserId().getProfileIMG();
-                commentContent = commentData.getContent();
-                existSalve = commentData.getExistSalve();
-                updateTime = commentData.getIsUpdated();
+            Page<Comment> commentPage = masterCommentRepository.findByFeedSeqAndIsDELETEDAndRole(feedData, false, pageable , CommentRole.MASTER_COMMENT );
 
-                MasterCommentReadDTO masterCommentReadDTO = new MasterCommentReadDTO();
-                masterCommentReadDTO.setUserProfile(userProfile);
-                masterCommentReadDTO.setUserNickName(userNickName);
-                masterCommentReadDTO.setCommentContent(commentContent);
-                masterCommentReadDTO.setExistSalve(existSalve);
-                masterCommentReadDTO.setIsUpdated(updateTime);
-
-                returnList.add(masterCommentReadDTO);
-            }
+            Page<MasterCommentReadDTO> returnPage = commentPage.map(commentData -> {
+                MasterCommentReadDTO dto = new MasterCommentReadDTO();
+                dto.setUserProfile(commentData.getUserId().getProfileIMG());
+                dto.setUserNickName(commentData.getUserId().getNickName());
+                dto.setCommentContent(commentData.getContent());
+                dto.setExistSalve(commentData.getExistSalve());
+                dto.setIsUpdated(commentData.getIsUpdated());
+                return dto;
+            });
             //printCommentList(commentList); //확인용임
-            printReturnList(returnList); //확인용임
+            //printReturnList(returnList); //확인용임
+            return returnPage;
+
         }else{
             //feed not exist
-        }
             return  null;
+        }
+
     }
 
 
@@ -121,8 +119,9 @@ public class CommentService {
             }else{
                 //slave Comment
                 if(masterCommentRepository.existsById(commentUploadDTO.getMasterCommentSeq())){
-                    //feed 존재
+                    //master Comment 존재
                     Comment masterComment = masterCommentRepository.findBySeq(commentUploadDTO.getMasterCommentSeq());
+
                     String text =  upload_slave_comment_db_service(commentUploadDTO , user , feed , masterComment);
 
                     if(text.equals("Success")){

@@ -1,11 +1,16 @@
 package com.LifeTales.domain.comment.controller;
 
 import com.LifeTales.domain.comment.repository.DTO.CommentUploadDTO;
+import com.LifeTales.domain.comment.repository.DTO.MasterCommentReadDTO;
 import com.LifeTales.domain.comment.service.CommentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
@@ -54,12 +59,20 @@ public class CommentController {
 
 
     }
-    @GetMapping("/read/MasterComment/{feedSeq}/")
-    public ResponseEntity MasterCommentListRead(@PathVariable Long feedSeq){
-        log.info("MasterCommentList Read Controller Start >>  {}" , feedSeq);
-        commentService.master_comment_read_service(feedSeq);
-        return null;
-    }
+    // ex URL http://localhost:8080/api/v1/comment/read/MasterComment/1?page=0
+    @GetMapping("/read/MasterComment/{feedSeq}")
+    public ResponseEntity<Page<MasterCommentReadDTO>> masterCommentListRead(
+            @PathVariable(required = true) Long feedSeq,
+            @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
+            Pageable pageable
+            )
+     {
+        log.info("MasterCommentList Read Controller Start >> {}", feedSeq);
+        //pageNumber  = (pageNumber == 0)? 0: (pageNumber -1);
 
+        Page<MasterCommentReadDTO> commentPage = commentService.master_comment_read_service(feedSeq , pageNum , pageable );
+
+        return ResponseEntity.ok(commentPage);
+    }
 
 }
