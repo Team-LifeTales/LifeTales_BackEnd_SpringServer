@@ -3,6 +3,7 @@ import com.LifeTales.domain.comment.domain.Comment;
 import com.LifeTales.domain.comment.domain.CommentRole;
 import com.LifeTales.domain.comment.repository.DTO.CommentUploadDTO;
 import com.LifeTales.domain.comment.repository.DTO.MasterCommentReadDTO;
+import com.LifeTales.domain.comment.repository.DTO.SlaveCommentReadDTO;
 import com.LifeTales.domain.comment.repository.MasterCommentRepository;
 import com.LifeTales.domain.comment.repository.SlaveCommentRepository;
 import com.LifeTales.domain.feed.domain.Feed;
@@ -29,6 +30,7 @@ import static org.springframework.data.jpa.domain.AbstractAuditable_.createdDate
 @Transactional
 public class CommentService {
     private static final int PAGE_POST_COUNT = 10;
+    private static final String orderCriteria = "isUpdated";
     @Autowired
     private final FeedRepository feedRepository;
     private final UserRepository userRepository;
@@ -36,6 +38,44 @@ public class CommentService {
     //comment Repository
     private final MasterCommentRepository masterCommentRepository;
     private final SlaveCommentRepository slaveCommentRepository;
+
+    public Page<SlaveCommentReadDTO> slave_comment_read_service(Long feedSeq , int pageNum , Pageable pageable , Long masterCommentSeq ){
+        /**
+         * to do
+         * feed 존재여부..
+         * master Comment 존재여부..
+         * 주어야할 데이터
+         *  * 유저 NickName , profile
+         *  comment 에 대한 내용 , 최종일
+         */
+        log.info("salve Feed Check");
+        if(feedRepository.existsBySeq(feedSeq) && masterCommentRepository.existsById(masterCommentSeq)){
+            Sort sort = Sort.by(
+                    Sort.Order.desc(orderCriteria)
+            );
+            pageable = PageRequest.of(pageNum, PAGE_POST_COUNT, sort);
+            Comment masterCommnet = masterCommentRepository.findBySeq(masterCommentSeq);
+
+            Page<Comment> commentPage = slaveCommentRepository.findByMasterCommentAndIsDELETEDAndRole(masterCommnet , false , pageable , CommentRole.SLAVE_COMMENT);
+            Page<SlaveCommentReadDTO> returnPage = commentPage.map(commentData -> {
+                SlaveCommentReadDTO slaveCommentReadDTO = new SlaveCommentReadDTO();
+                slaveCommentReadDTO.setUserProfile(commentData.getUserId().getId());
+                slaveCommentReadDTO.setUserNickName(commentData.getUserId().getNickName());
+                slaveCommentReadDTO.setCommentContent(commentData.getContent());
+                slaveCommentReadDTO.setIsUpdated(commentData.getIsUpdated());
+
+                return slaveCommentReadDTO;
+            });
+            return returnPage;
+
+        }else{
+            return  null;
+        }
+
+
+    }
+
+
 
     public Page<MasterCommentReadDTO> master_comment_read_service(Long feedSeq , int pageNum , Pageable pageable){
         /**
@@ -48,7 +88,6 @@ public class CommentService {
          */
         log.info("feedFinder Start");
         if(feedRepository.existsBySeq(feedSeq)){
-            String orderCriteria = "isUpdated";
 
             Sort sort = Sort.by(
                     Sort.Order.desc(orderCriteria)
