@@ -2,6 +2,8 @@ package com.LifeTales.domain.comment.service;
 import com.LifeTales.domain.comment.domain.Comment;
 import com.LifeTales.domain.comment.domain.CommentRole;
 import com.LifeTales.domain.comment.repository.DTO.CommentUploadDTO;
+import com.LifeTales.domain.comment.repository.DTO.MasterCommentReadDTO;
+import com.LifeTales.domain.comment.repository.DTO.SlaveCommentReadDTO;
 import com.LifeTales.domain.comment.repository.MasterCommentRepository;
 import com.LifeTales.domain.comment.repository.SlaveCommentRepository;
 import com.LifeTales.domain.feed.domain.Feed;
@@ -12,17 +14,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
+import java.util.List;
 
-import java.util.Optional;
+import static org.springframework.data.jpa.domain.AbstractAuditable_.createdDate;
 
 @Slf4j
 @RequiredArgsConstructor
 @Service
 @Transactional
 public class CommentService {
+    private static final int PAGE_POST_COUNT = 10;
+    private static final String orderCriteria = "isUpdated";
     @Autowired
     private final FeedRepository feedRepository;
     private final UserRepository userRepository;
@@ -31,8 +39,91 @@ public class CommentService {
     private final MasterCommentRepository masterCommentRepository;
     private final SlaveCommentRepository slaveCommentRepository;
 
+    public Page<SlaveCommentReadDTO> slave_comment_read_service(Long feedSeq , int pageNum , Pageable pageable , Long masterCommentSeq ){
+        /**
+         * to do
+         * feed 존재여부..
+         * master Comment 존재여부..
+         * 주어야할 데이터
+         *  * 유저 NickName , profile
+         *  comment 에 대한 내용 , 최종일
+         */
+        log.info("salve Feed Check");
+        if(feedRepository.existsBySeq(feedSeq) && masterCommentRepository.existsById(masterCommentSeq)){
+            Sort sort = Sort.by(
+                    Sort.Order.desc(orderCriteria)
+            );
+            pageable = PageRequest.of(pageNum, PAGE_POST_COUNT, sort);
+            Comment masterCommnet = masterCommentRepository.findBySeq(masterCommentSeq);
 
-    public String comment_upload_service(@RequestBody CommentUploadDTO commentUploadDTO){
+            Page<Comment> commentPage = slaveCommentRepository.findByMasterCommentAndIsDELETEDAndRole(masterCommnet , false , pageable , CommentRole.SLAVE_COMMENT);
+            Page<SlaveCommentReadDTO> returnPage = commentPage.map(commentData -> {
+                SlaveCommentReadDTO slaveCommentReadDTO = new SlaveCommentReadDTO();
+                slaveCommentReadDTO.setUserProfile(commentData.getUserId().getId());
+                slaveCommentReadDTO.setUserNickName(commentData.getUserId().getNickName());
+                slaveCommentReadDTO.setCommentContent(commentData.getContent());
+                slaveCommentReadDTO.setIsUpdated(commentData.getIsUpdated());
+
+                return slaveCommentReadDTO;
+            });
+            return returnPage;
+
+        }else{
+            return  null;
+        }
+
+
+    }
+
+
+
+    public Page<MasterCommentReadDTO> master_comment_read_service(Long feedSeq , int pageNum , Pageable pageable){
+        /**
+         * to do
+         * feed 존재여부..
+         * comment 조회 - 해당 피드에 있는 master comment들에 대한 리스트
+         * 주어야할 정보 .. 댓글을 단
+         * 유저 NickName , profile
+         * comment 에 대한 내용 , 최종일 , slave 댓글이 있는지에 대한 여부..
+         */
+        log.info("feedFinder Start");
+        if(feedRepository.existsBySeq(feedSeq)){
+
+            Sort sort = Sort.by(
+                    Sort.Order.desc(orderCriteria)
+            );
+
+            pageable = PageRequest.of(pageNum, PAGE_POST_COUNT, sort);
+
+
+            //feed exist
+            Feed feedData = feedRepository.findBySeq(feedSeq);
+            Page<Comment> commentPage = masterCommentRepository.findByFeedSeqAndIsDELETEDAndRole(feedData, false, pageable , CommentRole.MASTER_COMMENT );
+
+            Page<MasterCommentReadDTO> returnPage = commentPage.map(commentData -> {
+                MasterCommentReadDTO dto = new MasterCommentReadDTO();
+                dto.setUserProfile(commentData.getUserId().getProfileIMG());
+                dto.setUserNickName(commentData.getUserId().getNickName());
+                dto.setCommentContent(commentData.getContent());
+                dto.setExistSalve(commentData.getExistSalve());
+                dto.setIsUpdated(commentData.getIsUpdated());
+                return dto;
+            });
+            //printCommentList(commentList); //확인용임
+            //printReturnList(returnList); //확인용임
+            return returnPage;
+
+        }else{
+            //feed not exist
+            return  null;
+        }
+
+    }
+
+
+
+
+    public String comment_upload_service(CommentUploadDTO commentUploadDTO){
         /**
          * do
          * feed 존재여부..
@@ -67,11 +158,17 @@ public class CommentService {
             }else{
                 //slave Comment
                 if(masterCommentRepository.existsById(commentUploadDTO.getMasterCommentSeq())){
-                    //feed 존재
+                    //master Comment 존재
                     Comment masterComment = masterCommentRepository.findBySeq(commentUploadDTO.getMasterCommentSeq());
+
                     String text =  upload_slave_comment_db_service(commentUploadDTO , user , feed , masterComment);
 
-                    return "Success";
+                    if(text.equals("Success")){
+                        return "Success";
+                    }else{
+                        return text;
+                    }
+
                 }else{
                     //feed 없음
                     return "feed is not exist";
@@ -101,7 +198,7 @@ public class CommentService {
         }
 
     }
-
+    
     private String upload_master_comment_db_service(CommentUploadDTO commentUploadDTO , User user , Feed feed){
         try {
                 masterCommentRepository.save(
@@ -110,8 +207,11 @@ public class CommentService {
                                 .role(commentUploadDTO.getRole())
                                 .userId(user)
                                 .feedSeq(feed)
+                                .existSalve(0L)
                                 .build()
                 );
+
+
             return "Success";
         } catch (DataAccessException ex) {
             // 데이터베이스 예외 처리
@@ -138,6 +238,11 @@ public class CommentService {
                             .masterComment(masterComment)
                             .build()
             );
+            //master 댓글 ++
+            // 여기서 masterComment의 existSalve 값을 업데이트
+            masterComment.setExistSalve(masterComment.getExistSalve() + 1);
+            masterCommentRepository.save(masterComment);
+
             return "Success";
         }catch (DataAccessException ex) {
             // 데이터베이스 예외 처리
@@ -153,5 +258,29 @@ public class CommentService {
             return "RuntimeException";
         }
     }
+    public void printCommentList(List<Comment> commentList) {
+        for (Comment comment : commentList) {
+            System.out.println("Comment Seq: " + comment.getSeq());
+            System.out.println("Content: " + comment.getContent());
+            System.out.println("Role: " + comment.getRole());
+            System.out.println("Exist Slave: " + comment.getExistSalve());
+            System.out.println("User ID: " + comment.getUserId().getId());
+            System.out.println("Is Created: " + comment.getIsCreated());
+            System.out.println("Is Updated: " + comment.getIsUpdated());
+            System.out.println("Is Deleted: " + comment.isDELETED());
+            System.out.println("---------------------------");
+        }
+    }
+    public void printReturnList(List<MasterCommentReadDTO> returnList) {
+        for (MasterCommentReadDTO dto : returnList) {
+            System.out.println("User Profile: " + dto.getUserProfile());
+            System.out.println("User NickName: " + dto.getUserNickName());
+            System.out.println("Comment Content: " + dto.getCommentContent());
+            System.out.println("Exist Slave: " + dto.getExistSalve());
+            System.out.println("Update Time: " + dto.getIsUpdated());
+            System.out.println("---------------------------");
+        }
+    }
+
 
 }
