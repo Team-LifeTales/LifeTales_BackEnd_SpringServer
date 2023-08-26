@@ -18,7 +18,7 @@
 
     function getImage() {
         var xhr = new XMLHttpRequest();
-        xhr.open("GET", "http://localhost:8080/test/familyData/neymar", true);
+        xhr.open("GET", "http://localhost:8080/test/familyData/형찬가족", true);
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4 && xhr.status === 200) {
                 var response = JSON.parse(xhr.responseText);

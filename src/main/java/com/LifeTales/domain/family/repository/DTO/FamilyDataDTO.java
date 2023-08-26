@@ -15,6 +15,6 @@ public class FamilyDataDTO {
     private String nickName;
     private String introduce;
     private InputStream profileIMG;
-    private Long userSeq;
-    private List <FeedDataDTO> feedDataDtos;
+    private String userId;
+    private List <FeedDataDTO> feedDataDTOs;
 }

@@ -29,24 +29,24 @@ public class FamilyController {
         this.familyNicknameChecker = familyNicknameChecker;
     }
 
-    @PostMapping("/signUp/createFamily/")
+    @PostMapping("/createFamily/detail")
     public ResponseEntity FamilySignUp(@RequestParam("nickname") String nickname,
                                             @RequestParam(value = "profileIMG", required = false) MultipartFile profileIMG,
                                             @RequestParam("introduce") String introduce,
                                             @RequestParam("userSeq") Long userSeq) throws IOException {
-        log.info("basicUserSignUp-Start >> nickName : {}" , nickname);
+        log.info("basicFamilySignUp-Start >> nickName : {}" , nickname);
 
         FamilySignUpDTO signUpData = new FamilySignUpDTO();
-        signUpData.setNickName(nickname);
+        signUpData.setNickName(nickname);  //nickname 저장
 
         if (profileIMG != null){
             signUpData.setProfileIMG(profileIMG.getBytes());
         }else{
             signUpData.setProfileIMG(null);
-        }
+        } //이미지 저장, 없을시 null로 처리
 
-        signUpData.setIntroduce(introduce);
-        signUpData.setUserSeq(userSeq);
+        signUpData.setIntroduce(introduce); //intro 추가
+        signUpData.setUserSeq(userSeq); // userSeq추가
         log.info("FamilySignUp data Check - Stat");
         //Validation Start
         String returnValidText  = familyValidator.familySignUpValidate(signUpData);
@@ -56,9 +56,9 @@ public class FamilyController {
         if("Success".equals(returnValidText)){
 
             // Service (Create Logic Start)
-            boolean checkIdExists = familyNicknameChecker.doesNickNameExist(nickname);
-            boolean checkUserSeqExists = familyNicknameChecker.doesUserSeqExist(userSeq);
-            if (!checkIdExists && !checkUserSeqExists){
+            boolean checkNickNameExists = familyNicknameChecker.doesNickNameExist(nickname); //nickName 존재하는 지
+            boolean checkUserSeqExists = familyNicknameChecker.doesUserSeqExist(userSeq); //user 존재하는 지
+            if (!checkNickNameExists && checkUserSeqExists){
                 log.info("FamilySignUp service logic Start");
                 String return_text = familyService.family_signUp_service(signUpData);
                 log.info("FamilySignUp service logic end");
@@ -84,12 +84,12 @@ public class FamilyController {
                 // Service (Create Logic End)
                 return responseEntity;
             }else{
-                if (checkIdExists){
+                if (checkNickNameExists){
                     log.info("FamilySignUp validation failed: already nickName in Database");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("already nickName in Database");
                 }else{
                     log.info("FamilySignUp validation failed: already userSeq in Database");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("already userSeq in Database");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not exists userSeq in Database");
                 }
 
             }

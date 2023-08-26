@@ -22,6 +22,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,6 +41,9 @@ public class FamilyService {
     private final FamilyNicknameChecker familySeqChecker;
     private final RequestIMGService imgService;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     public String family_signUp_service(FamilySignUpDTO familySignUpdata){
         try {
             String fileName = "";
@@ -47,7 +52,6 @@ public class FamilyService {
                 //프로파일 이미지가 있는경우
                 try{
                     fileName = "FamilyProfile-"+familySignUpdata.getNickName();
-                    String fileUrl= "https://" + bucket + "/lifeTales" +fileName;
                     byte[] imageData = familySignUpdata.getProfileIMG();
                     String mimeType = "image/jpeg";
 
@@ -67,14 +71,14 @@ public class FamilyService {
             }else{
                 fileName = "profileImage"; // 없는 경우에는 그냥 fileName을 null이라고 해놓음 일단 -> 기본 이미지로 변경하면 될듯
             }
-            log.error(fileName);
 
+            User user = entityManager.find(User.class , familySignUpdata.getUserSeq());
             familyRepository.save(
                     Family.builder()
                             .nickName(familySignUpdata.getNickName())
                             .profileIMG(fileName)
                             .introduce(familySignUpdata.getIntroduce())
-                            .userSeq(familySignUpdata.getUserSeq())
+                            .userSeq(user)
                             .build()
             );
             return "Success";
@@ -102,17 +106,17 @@ public class FamilyService {
          */
 
         log.info("getDataForFamily Start >> {}",nickname);
-        boolean idCheck = familySeqChecker.doesNickNameExist(nickname);
-        log.info("getDataForUser checkId result >> {}" , idCheck);
-        if(idCheck){
-            log.info("getDataForUser checkId Success >> {}" , nickname);
+        boolean nickNameCheck = familySeqChecker.doesNickNameExist(nickname);
+        log.info("getDataForFamily checkNickname result >> {}" , nickNameCheck);
+        if(nickNameCheck){
+            log.info("getDataForFamily checkNickName Success >> {}" , nickname);
             FamilyDataDTO familyDataDTO = new FamilyDataDTO();
             Family familyData = familyRepository.findByNickName(nickname);
             //데이터 셋업
-            familyDataDTO.setUserSeq(familyData.getUserSeq());
+            familyDataDTO.setUserId(familyData.getUserSeq().getId());
             familyDataDTO.setIntroduce(familyData.getIntroduce());
             familyDataDTO.setNickName(familyData.getNickName());
-            familyDataDTO.setFeedDataDtos(null);
+            familyDataDTO.setFeedDataDTOs(null);
             //s3에 요청하기 전 확인하기
             if(familyData.getProfileIMG() != null){
                 log.info("getDataForUser S3 connect Start");

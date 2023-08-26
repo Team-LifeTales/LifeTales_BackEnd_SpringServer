@@ -7,9 +7,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class FamilyNicknameChecker {
     private final FamilyRepository familyRepository;
+    private final UserRepository userRepository;
+    public FamilyNicknameChecker(FamilyRepository familyRepository, UserRepository userRepository) {
 
-    public FamilyNicknameChecker(FamilyRepository familyRepository) {
         this.familyRepository = familyRepository;
+        this.userRepository = userRepository;
     }
 
     public boolean doesNickNameExist(String nickname) {
@@ -22,6 +24,6 @@ public class FamilyNicknameChecker {
 
 
     public boolean doesUserSeqExist(Long userSeq) {
-        return familyRepository.existsByUserSeq(userSeq);
+        return userRepository.existsById(userSeq);
     }
 }

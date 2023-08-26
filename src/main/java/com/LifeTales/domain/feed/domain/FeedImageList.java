@@ -1,5 +1,6 @@
 package com.LifeTales.domain.feed.domain;
 
+import com.LifeTales.domain.family.domain.Family;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -23,8 +24,11 @@ public class FeedImageList {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="SEQ", nullable = false)
     private Long seq;
-    @Column(name="FEEDSEQ", nullable = false)
-    private Long feedSeq;
+
+
+    @ManyToOne
+    @JoinColumn(name = "FEED_SEQ")
+    private Feed feedSeq;
 
     @Column(name = "FEEDIMAGEURL" , nullable = false , length = 100)
     private String feedImageURL;

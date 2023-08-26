@@ -1,5 +1,6 @@
 package com.LifeTales.domain.user.repository;
 
+import com.LifeTales.domain.family.domain.Family;
 import com.LifeTales.domain.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 

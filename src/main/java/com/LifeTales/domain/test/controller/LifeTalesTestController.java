@@ -105,28 +105,13 @@ public class LifeTalesTestController {
         }
 
     }
-    @ResponseBody
-    @GetMapping("/test/family/{nickname}")
-    public ResponseEntity lifeTalesFamilyPage(@PathVariable String nickname) throws IOException {
-        log.info("lifeTalesFamilyDataGetTest >> id : {}" , nickname);
-        FamilyDataDTO familyDataDTO = familyService.getDataForFamily(nickname);
-        List<FeedDataDTO> feedDataDTO = feedService.getFeedDataForFamily(nickname);
-        familyDataDTO.setFeedDataDtos(feedDataDTO);
-        if(familyDataDTO == null){
-            log.info("null >> ");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
-        }else{
-            String json = objectMapper.writeValueAsString(familyDataDTO);
-            log.info(json);
-            return ResponseEntity.ok(json);
-        }
 
-    }
     @ResponseBody
     @GetMapping("/test/feedDataFamily/{nickname}")
     public ResponseEntity lifeTalesFeedDataForFamilyGetTest(@PathVariable String nickname) throws IOException {
         log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", nickname);
         List<FeedDataDTO> feedDataDTO = feedService.getFeedDataForFamily(nickname);
+
         if (feedDataDTO == null) {
             log.info("null >> ");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
