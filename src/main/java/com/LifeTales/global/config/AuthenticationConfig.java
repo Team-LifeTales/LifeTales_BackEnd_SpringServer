@@ -1,5 +1,6 @@
 package com.LifeTales.global.config;
 
+import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class AuthenticationConfig {
 
     private final UserService userService;
+    private final UserRepository userRepository;
     @Value("${jwt.Life-tales-secretKey}")
     private String secretKey;
 
@@ -37,7 +39,7 @@ public class AuthenticationConfig {
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // jwt 사용하는경우 이렇게 하는거라고함
                 .and()
-                .addFilterBefore(new JwtFilter(userService , secretKey) , UsernamePasswordAuthenticationFilter.class) //jwt Token 용
+                .addFilterBefore(new JwtFilter(userService , secretKey , userRepository) , UsernamePasswordAuthenticationFilter.class) //jwt Token 용
                 .build();
      }
 }

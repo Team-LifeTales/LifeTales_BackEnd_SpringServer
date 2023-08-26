@@ -7,6 +7,9 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import java.util.Date;
 
 public class JwtUtil {
+    public static String getUserId(String token , String secretKey){
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().get("id" , String.class);
+    }
 
     public static boolean isExpired(String token , String secretKey){
         return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getExpiration().before(new Date());
