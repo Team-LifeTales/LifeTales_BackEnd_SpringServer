@@ -32,7 +32,7 @@ public class BasicUserController {
         this.userIdChecker = userIdChecker;
     }
 
-    @PostMapping("/login/")
+    @PostMapping("/login")
     public ResponseEntity<String> basicUserLogin(@RequestBody UserSignInDTO userSignInDTO){
         log.info("basicUserLogin >> {}" , userSignInDTO.getId());
         String token  = userService.login(userSignInDTO.getId() , userSignInDTO.getPwd());
@@ -42,7 +42,7 @@ public class BasicUserController {
 
 
 
-    @PostMapping("/signUp/detail/")
+    @PostMapping("/signUp/detail")
     public ResponseEntity basicUserSignUp(@RequestBody UserSignUpDTO signUpData) {
         log.info("basicUserSignUp Start - need Data \nid : {} , PWD : {}, NickName : {} , " +
                 "Name : {} , Birthday ; {} , PhoneNumber : {} , email : {}" +
@@ -94,7 +94,7 @@ public class BasicUserController {
 
     }
 
-    @PostMapping("/signUp/profile_introduce/")
+    @PostMapping("/signUp/profile_introduce")
     public ResponseEntity basicUserSignUpProfileUpload(@RequestParam("profileIMG") MultipartFile profileIMG,
                                                        @RequestParam("id") String id,
                                                        @RequestParam("intro") String intro) throws IOException {
@@ -134,7 +134,7 @@ public class BasicUserController {
 
     }
 
-    @PostMapping("/signUp/Join_family/")
+    @PostMapping("/signUp/Join_family")
     public ResponseEntity basicUserSignUpJoinFamily(@RequestBody UserSignUpStep3DTO signUpData){
         log.info("basicUserSignUpJoinFamily >> {}" ,signUpData.getId());
 
