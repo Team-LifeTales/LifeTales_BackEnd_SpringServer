@@ -24,7 +24,7 @@ public class CommentController {
 
     }
 
-    @PostMapping("/upload/comment/")
+    @PostMapping("/upload/comment")
     public ResponseEntity CommentUpload(@RequestBody CommentUploadDTO commentUploadDTO) {
         log.info("CommentUpload Start - need Data \nuser : {} , feed : {}, content : {} , " ,commentUploadDTO.getUserId(),commentUploadDTO.getFeedSeq(), commentUploadDTO.getContent());
 

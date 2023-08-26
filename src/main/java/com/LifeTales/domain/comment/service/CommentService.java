@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
-import static org.springframework.data.jpa.domain.AbstractAuditable_.createdDate;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -39,7 +38,7 @@ public class CommentService {
     private final MasterCommentRepository masterCommentRepository;
     private final SlaveCommentRepository slaveCommentRepository;
 
-    public Page<SlaveCommentReadDTO> slave_comment_read_service(Long feedSeq , int pageNum , Pageable pageable , Long masterCommentSeq ){
+    public Page<SlaveCommentReadDTO> slave_comment_read_service(Long feedSeq , int pageNum , Pageable pageable , Long masterCommentSeq){
         /**
          * to do
          * feed 존재여부..
