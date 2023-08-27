@@ -1,5 +1,7 @@
 package com.LifeTales.domain.feed.domain;
 
+import com.LifeTales.domain.family.domain.Family;
+import com.LifeTales.domain.user.domain.User;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -23,12 +25,15 @@ public class Feed {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="SEQ")
     private Long seq;
-    @Column(name="FAMILYSEQ")
-    private Long familySeq;
-    @Column(name="USERSEQ")
-    private Long userSeq;
-    @Column(name="FEEDIMAGELISTSEQ")
-    private Long feedImageListSeq;
+
+    @ManyToOne
+    @JoinColumn(name = "FAMILY_SEQ")
+    private Family familySeq;
+
+    @ManyToOne
+    @JoinColumn(name = "USER_SEQ")
+    private User userSeq;
+
 
     @Column(name = "CONTENT" , nullable = true , length = 200)
     private String content;

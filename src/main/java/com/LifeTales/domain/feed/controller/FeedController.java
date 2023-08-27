@@ -1,5 +1,6 @@
 package com.LifeTales.domain.feed.controller;
 
+import com.LifeTales.common.User.FeedChecker;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.service.FeedService;
 import com.LifeTales.global.Validator.FeedUploadValidator;
@@ -22,26 +23,28 @@ public class FeedController {
     private final FeedService feedService;
     private final FeedUploadValidator feedUploadValidator;
 
-    //private final FeedNicknameChecker familyNicknameChecker;
-    public FeedController(ObjectMapper objectMapper, FeedService feedService, FeedUploadValidator feedUploadValidator) {
+    private final FeedChecker feedChecker;
+    public FeedController(ObjectMapper objectMapper, FeedService feedService, FeedUploadValidator feedUploadValidator, FeedChecker feedChecker) {
         this.objectMapper = objectMapper;
         this.feedService = feedService;
         this.feedUploadValidator = feedUploadValidator;
+        this.feedChecker = feedChecker;
     }
 
-    @PostMapping("/upload/feed/")
+    @PostMapping("/upload/detail/")
     public ResponseEntity FeedUpload( @RequestParam("userSeq") Long userSeq,
                                            @RequestParam("familySeq") Long familySeq,
                                            @RequestParam(value = "uploadIMG", required = false) List<MultipartFile> uploadIMGs,
                                            @RequestParam("content") String content) throws IOException {
 
-        log.info("basicFeedUpload-Start >> userSeq : {}", userSeq);
+        log.info("FeedUpload-Start >> userSeq : {} familySeq : {}", userSeq , familySeq);
 
         FeedUploadDTO uploadData = new FeedUploadDTO();
         uploadData.setUserSeq(userSeq);
         uploadData.setFamilySeq(familySeq);
+        uploadData.setContent(content);
 
-        if (uploadIMGs != null && !uploadIMGs.isEmpty()) {
+        if (uploadIMGs != null && !uploadIMGs.isEmpty()) { //uploadImage가 있을 경우
             List<byte[]> imageBytesList = new ArrayList<>();
 
             for (MultipartFile uploadIMG : uploadIMGs) {
@@ -59,7 +62,7 @@ public class FeedController {
             uploadData.setUploadImages(null);
         }
 
-        uploadData.setContent(content);
+
         log.info("FeedUpload data Check - Stat");
         //Validation Start
         String returnValidText = feedUploadValidator.feedUploadValidate(uploadData);
@@ -67,28 +70,44 @@ public class FeedController {
         log.info("FeedUpload data Check - End");
         ResponseEntity<String> responseEntity;
         if ("Success".equals(returnValidText)) {
-            String return_text = feedService.Feed_upload_service(uploadData);
-            if ("Success".equals(return_text)) {
-                log.info("FamilySignUp service Success , {}", uploadData.getUserSeq());
-                // 회원가입 성공한 경우 처리
-                responseEntity = ResponseEntity.ok("upload Success");
-            } else if ("DataAccessException".equals(return_text)) {
-                log.info("FeedUpload service DataAccessException , {}", uploadData.getUserSeq());
-                // 데이터베이스 예외 발생한 경우 처리
-                responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("DataAccessException");
-            } else if ("RuntimeException".equals(return_text)) {
-                log.info("FeedUpload service RuntimeException , {}", uploadData.getUserSeq());
-                // 런타임 예외 발생한 경우 처리
-                responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("RuntimeException");
+            boolean userIdCheck = feedChecker.doesUserSeqExist(userSeq);
+            boolean familyIdCheck = feedChecker.doesFamilySeqExist(familySeq);
+            if (userIdCheck && familyIdCheck){
+                String return_text = feedService.Feed_upload_service(uploadData);
+                if ("Success".equals(return_text)) {
+                    log.info("FamilySignUp service Success , {}", uploadData.getUserSeq());
+                    // 회원가입 성공한 경우 처리
+                    responseEntity = ResponseEntity.ok("upload Success");
+                } else if ("DataAccessException".equals(return_text)) {
+                    log.info("FeedUpload service DataAccessException , {}", uploadData.getUserSeq());
+                    // 데이터베이스 예외 발생한 경우 처리
+                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("DataAccessException");
+                } else if ("RuntimeException".equals(return_text)) {
+                    log.info("FeedUpload service RuntimeException , {}", uploadData.getUserSeq());
+                    // 런타임 예외 발생한 경우 처리
+                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("RuntimeException");
+                } else {
+                    log.info("FeedUpload service don't Know Error , Please contact about Developer, {}", uploadData.getUserSeq());
+                    // 기타 예외나 다른 경우 처리
+                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("don't Know Error");
+                }
+                return  responseEntity;
             } else {
-                log.info("FeedUpload service don't Know Error , Please contact about Developer, {}", uploadData.getUserSeq());
-                // 기타 예외나 다른 경우 처리
-                responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("don't Know Error");
+                if (!userIdCheck){
+                    log.info("유저가 존재하지 않습니다");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("유저가 존재하지 않습니다");
+                }else{
+                    log.info("가족이 존재하지 않습니다");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("가족이 존재하지 않습니다");
+                }
+
             }
-            return  responseEntity;
-        } else {
+
+
+        }else{
             log.info("FeedUpload validation failed: {}", returnValidText);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(returnValidText);
         }
+
     }
 }

@@ -1,6 +1,7 @@
 package com.LifeTales.domain.family.domain;
 
 import com.LifeTales.domain.family.repository.DTO.FamilySearchDTO;
+import com.LifeTales.domain.user.domain.User;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -50,8 +51,9 @@ public class Family {
     @Column(name = "INTRODUCE" , nullable = true , length = 100)
     private String introduce;
 
-    @Column(name = "USERSEQ" , nullable = false)
-    private Long userSeq;
+    @ManyToOne
+    @JoinColumn(name = "USER_SEQ")
+    private User userSeq;
 
     @Column(name = "IS_CREATED" , nullable = false)
     @CreationTimestamp
