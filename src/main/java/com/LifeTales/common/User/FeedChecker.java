@@ -28,8 +28,16 @@ public class FeedChecker {
         return userRepository.existsById(seq);
     }
 
+    public boolean doesUserIdExist(String id) {
+        return userRepository.existsById(id);
+    }
+
     public boolean doesFamilySeqExist(Long seq) {
         return familyRepository.existsById(seq);
+    }
+
+    public boolean doesFamilyNicknameExist(String nickname) {
+        return familyRepository.existsByNickName(nickname);
     }
 
 

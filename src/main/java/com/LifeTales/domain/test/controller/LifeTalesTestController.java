@@ -1,5 +1,6 @@
 package com.LifeTales.domain.test.controller;
 
+import com.LifeTales.domain.comment.repository.DTO.MasterCommentReadDTO;
 import com.LifeTales.domain.family.repository.DTO.FamilyDataDTO;
 import com.LifeTales.domain.family.service.FamilyService;
 import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
@@ -13,6 +14,8 @@ import com.LifeTales.domain.user.service.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -108,18 +111,22 @@ public class LifeTalesTestController {
 
     @ResponseBody
     @GetMapping("/test/feedDataFamily/{nickname}")
-    public ResponseEntity lifeTalesFeedDataForFamilyGetTest(@PathVariable String nickname) throws IOException {
+    public ResponseEntity<Page<FeedDataDTO>> getFeedDataForFamily(
+            @PathVariable(required = true) String nickname,
+            @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
+            Pageable pageable
+    ) throws IOException {
         log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", nickname);
-        List<FeedDataDTO> feedDataDTO = feedService.getFeedDataForFamily(nickname);
+        Page<FeedDataDTO> feedPage = feedService.getFeedDataForFamily(nickname, pageNum, pageable);
 
-        if (feedDataDTO == null) {
+        if (feedPage == null) {
             log.info("null >> ");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+            return null;
         } else {
-            String json = objectMapper.writeValueAsString(feedDataDTO);
+            String json = objectMapper.writeValueAsString(feedPage);
             log.info(json);
             log.info("sucess");
-            return ResponseEntity.ok(json);
+            return ResponseEntity.ok(feedPage);
         }
 
 
@@ -127,9 +134,11 @@ public class LifeTalesTestController {
 
     @ResponseBody
     @GetMapping("/test/feedDataUser/{id}")
-    public ResponseEntity lifeTalesFeedDataForUserGetTest(@PathVariable String id) throws IOException {
+    public ResponseEntity lifeTalesFeedDataForUserGetTest(@PathVariable(required = true) String id,
+                                                          @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
+                                                          Pageable pageable) throws IOException {
         log.info("lifeTalesFeedDataForUserGetTest >> id : {}", id);
-        List<FeedDataDTO> feedDataDTO = feedService.getFeedDataForUser(id);
+        Page<FeedDataDTO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
         if (feedDataDTO == null) {
             log.info("null >> ");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");

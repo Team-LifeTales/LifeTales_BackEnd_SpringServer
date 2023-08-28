@@ -1,11 +1,15 @@
 package com.LifeTales.domain.feed.controller;
 
 import com.LifeTales.common.User.FeedChecker;
+import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
+import com.LifeTales.domain.feed.repository.DTO.FeedDetailDTO;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.service.FeedService;
 import com.LifeTales.global.Validator.FeedUploadValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -109,5 +113,58 @@ public class FeedController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(returnValidText);
         }
 
+    }
+
+    @GetMapping("/feedDataUser/{id}")
+    public ResponseEntity GetFeedDataForUser(@PathVariable(required = true) String id,
+                                                          @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
+                                                          Pageable pageable) throws IOException {
+        log.info("lifeTalesFeedDataForUserGetTest >> id : {}", id);
+        Page<FeedDataDTO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
+        if (feedDataDTO == null) {
+            log.info("null >> ");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+        } else {
+            String json = objectMapper.writeValueAsString(feedDataDTO);
+            log.info(json);
+            log.info("sucess");
+            return ResponseEntity.ok(json);
+        }
+    }
+
+    @GetMapping("/feedDataFamily/{nickname}")
+    public ResponseEntity<Page<FeedDataDTO>> getFeedDataForFamily(
+            @PathVariable(required = true) String nickname,
+            @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
+            Pageable pageable
+    ) throws IOException {
+        log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", nickname);
+        Page<FeedDataDTO> feedPage = feedService.getFeedDataForFamily(nickname, pageNum, pageable);
+
+        if (feedPage == null) {
+            log.info("null >> ");
+            return null;
+        } else {
+            String json = objectMapper.writeValueAsString(feedPage);
+            log.info(json);
+            log.info("sucess");
+            return ResponseEntity.ok(feedPage);
+        }
+
+
+    }
+    @GetMapping("/feedDetail/{seq}")
+    public ResponseEntity GetFeedDetail(@PathVariable Long seq) throws IOException {
+        log.info("lifeTalesFeedDataDetailGet>> seq : {}", seq);
+        FeedDetailDTO feedDetailDTO = feedService.getFeedDetail(seq);
+        if (feedDetailDTO == null) {
+            log.info("null >> ");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+        } else {
+            String json = objectMapper.writeValueAsString(feedDetailDTO);
+            log.info(json);
+            log.info("sucess");
+            return ResponseEntity.ok(json);
+        }
     }
 }
