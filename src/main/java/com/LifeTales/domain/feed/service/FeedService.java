@@ -4,6 +4,9 @@ package com.LifeTales.domain.feed.service;
 import com.LifeTales.common.User.FamilyNicknameChecker;
 import com.LifeTales.common.User.FeedChecker;
 import com.LifeTales.common.User.UserIdChecker;
+import com.LifeTales.domain.comment.domain.Comment;
+import com.LifeTales.domain.comment.domain.CommentRole;
+import com.LifeTales.domain.comment.repository.DTO.SlaveCommentReadDTO;
 import com.LifeTales.domain.family.domain.Family;
 import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.feed.domain.Feed;
@@ -24,6 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +41,7 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.random.*;
 import java.io.ByteArrayInputStream;
@@ -45,6 +53,8 @@ import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 @Service
 @Transactional
 public class FeedService {
+    private static final int PAGE_POST_COUNT = 9;
+    private static final String orderCriteria = "isCreated";
     @Autowired
     private final FeedRepository feedRepository;
     private final FeedImageListRepository feedImageListRepository;
@@ -125,7 +135,7 @@ public class FeedService {
         }
     }
 
-    public List<FeedDataDTO> getFeedDataForFamily(String nickname) throws IOException {
+    public Page<FeedDataDTO> getFeedDataForFamily(String nickname, int pageNum , Pageable pageable) throws IOException {
         /**
          * to do list
          * 가족 닉네임을 파라미터로 받음
@@ -136,30 +146,33 @@ public class FeedService {
          * */
 
         log.info("getFeedDataForFamily Start >> {}",nickname);
-        boolean nickNameCheck = familySeqChecker.doesNickNameExist(nickname); // family 존재하는지 확인
+        boolean nickNameCheck = feedSeqChecker.doesFamilyNicknameExist(nickname); // family 존재하는지 확인
         log.info("getFeedDataForFamily checkId result >> {}" , nickNameCheck);
         if(nickNameCheck){
             log.info("getFeedDataForFamily checkId Success >> {}" , nickname);
+            Sort sort = Sort.by(
+                    Sort.Order.desc(orderCriteria)
+            );
+            pageable = PageRequest.of(pageNum, PAGE_POST_COUNT, sort);
+
+
             Family family = familyRepository.findByNickName(nickname);
-            List<Feed> feedDatas = feedRepository.findByFamilySeq(family); //familySeq로 해당하는 feed 전부 찾아서 리스트로 가져옴
-            //데이터 셋업
-            List<FeedDataDTO> feedDataDTOList = new ArrayList<>(); // feed에 대한 정보들도 리스트로 만듬, 들어가는 정보 (메인사진, userSeq, familySeq, )
-            for(Feed feedData: feedDatas){
+            Page<Feed> feedPage = feedRepository.findByFamilySeqAndIsDELETED(family, false , pageable );
+            Page<FeedDataDTO> returnPage = feedPage.map(feedData -> {
                 boolean idCheck = userRepository.existsById(feedData.getUserSeq().getSeq());
                 if (idCheck){
                     FeedDataDTO feedDataDTO = new FeedDataDTO();
                     feedDataDTO.setUserSeq(feedData.getUserSeq().getSeq());
                     feedDataDTO.setFeedSeq(feedData.getSeq());
-                    List<FeedImageList> feedImageList = feedImageListRepository.findByFeedSeq(feedData);
-                    FeedImageList firstFeedImage = feedImageList.get(0); //메인 사진 하나만 가져옴
-                    String firstFeedImageURL = firstFeedImage.getFeedImageURL();
+                    feedDataDTO.setFeedIMG(null);
+                    FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
+                    String firstFeedImageURL = feedImage.getFeedImageURL();
                     if(firstFeedImageURL != null){
                         log.info("getFeedDataForFamily S3 connect Start");
                         String objectKey = firstFeedImageURL;
                         try {
                             InputStream feedIMG = imgService.getImageInputStream(objectKey);
-                            feedDataDTO.setFeedIMG(feedIMG);
-                            feedDataDTOList.add(feedDataDTO); //이미지까지 입력했을 시에 DTO리스트에 추가
+                            feedDataDTO.setFeedIMG(feedIMG); //이미지까지 입력했을 시에 DTO리스트에 추가
 
                         }catch (SdkClientException e){
                             //aws sdk Error
@@ -169,22 +182,23 @@ public class FeedService {
                             log.error("getFeedDataForFamily : " + e);
                             return null;
                         }
-
                     }
+                    return feedDataDTO;
                 }
-            }
-            return feedDataDTOList;
-
-
+                else{
+                    return null;
+                }
+            });
+            return returnPage;
 
         }else{
-            log.info("not exists  family");
+            log.info("not exists family");
             return null;
         }
 
     }
 
-    public List<FeedDataDTO> getFeedDataForUser(String id) throws IOException {
+    public Page<FeedDataDTO> getFeedDataForUser(String id, int pageNum , Pageable pageable) throws IOException {
         /**
          * to do list
          * 가족 닉네임을 파라미터로 받음
@@ -195,46 +209,50 @@ public class FeedService {
          * */
 
         log.info("getFeedDataForUser Start >> {}",id);
-        boolean idCheck = userIdChecker.doesIdExist(id);
+        boolean idCheck = feedSeqChecker.doesUserIdExist(id); // user 존재하는지 확인
         log.info("getFeedDataForUser checkId result >> {}" , idCheck);
         if(idCheck){
-            log.info("getFeedDataForUser checkId Success >> {}" , idCheck);
+            log.info("getFeedDataForUser checkId Success >> {}" , id);
+            Sort sort = Sort.by(
+                    Sort.Order.desc(orderCriteria)
+            );
+            pageable = PageRequest.of(pageNum, PAGE_POST_COUNT, sort);
+
+
             User user = userRepository.findById(id);
-            List<Feed> feedDatas = feedRepository.findByUserSeq(user);
+            List<Feed> feedDatas = feedRepository.findByUserSeq(user); //familySeq로 해당하는 feed 전부 찾아서 리스트로 가져옴
             //데이터 셋업
-            List<FeedDataDTO> feedDataDTOList = new ArrayList<>();
-            for(Feed feedData: feedDatas){
+            //List<FeedDataDTO> feedDataDTOList = new ArrayList<>(); // feed에 대한 정보들도 리스트로 만듬, 들어가는 정보 (메인사진, userSeq, familySeq, )
+            Page<Feed> feedPage = feedRepository.findByUserSeqAndIsDELETED(user, false , pageable );
+            Page<FeedDataDTO> returnPage = feedPage.map(feedData -> {
                 FeedDataDTO feedDataDTO = new FeedDataDTO();
                 feedDataDTO.setUserSeq(feedData.getUserSeq().getSeq());
                 feedDataDTO.setFeedSeq(feedData.getSeq());
-                List<FeedImageList> feedImageList = feedImageListRepository.findByFeedSeq(feedData);
-                FeedImageList firstFeedImage = feedImageList.get(0);
-                String firstFeedImageURL = firstFeedImage.getFeedImageURL();
-                if(firstFeedImageURL != null) {
+                feedDataDTO.setFeedIMG(null);
+                FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
+                String firstFeedImageURL = feedImage.getFeedImageURL();
+                if(firstFeedImageURL != null){
                     log.info("getFeedDataForUser S3 connect Start");
                     String objectKey = firstFeedImageURL;
                     try {
                         InputStream feedIMG = imgService.getImageInputStream(objectKey);
-                        feedDataDTO.setFeedIMG(feedIMG);
-                        feedDataDTOList.add(feedDataDTO);
+                        feedDataDTO.setFeedIMG(feedIMG); //이미지까지 입력했을 시에 DTO리스트에 추가
 
-                    } catch (SdkClientException e) {
+                    }catch (SdkClientException e){
                         //aws sdk Error
                         log.error("getFeedDataForUser : " + e);
                         return null;
-                    } catch (Exception e) {
+                    }catch (Exception e){
                         log.error("getFeedDataForUser : " + e);
                         return null;
                     }
-
                 }
-            }
-            return feedDataDTOList;
-
-
+                return feedDataDTO;
+            });
+            return returnPage;
 
         }else{
-            log.info("not exists user or faily");
+            log.info("not exists user");
             return null;
         }
 
