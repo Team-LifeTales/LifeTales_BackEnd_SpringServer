@@ -12,6 +12,23 @@ spring:
       hibernate:
         hbm2ddl.auto: update
         format_sql: true
+  mail:
+    host: smtp.gmail.com
+    port: #port
+    username: #email
+    password: #app password
+    protocol: smtps
+    properties:
+      auth: true
+
+      starttls:
+        required: true
+        enable: true
+
+      socketFactory:
+        class: javax.net.ssl.SSLSocketFactory
+        fallback: false
+        port: #port
 
 # AWS cloud Setting
 cloud:

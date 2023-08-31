@@ -5,6 +5,7 @@ import com.LifeTales.domain.user.repository.DTO.UserSignInDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep3DTO;
+import com.LifeTales.domain.user.service.MailService;
 import com.LifeTales.domain.user.service.UserService;
 import com.LifeTales.global.Validator.UserSignUpValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,12 +25,14 @@ public class BasicUserController {
     private final ObjectMapper objectMapper;
     private final UserService userService;
     private final UserSignUpValidator uservalidator;
+    private final MailService mailService;
 
     private final UserIdChecker userIdChecker;
-    public BasicUserController(ObjectMapper objectMapper, UserService userService, UserSignUpValidator uservalidator, UserIdChecker userIdChecker) {
+    public BasicUserController(ObjectMapper objectMapper, UserService userService, UserSignUpValidator uservalidator, MailService mailService, UserIdChecker userIdChecker) {
         this.objectMapper = objectMapper;
         this.userService = userService;
         this.uservalidator = uservalidator;
+        this.mailService = mailService;
         this.userIdChecker = userIdChecker;
     }
 
@@ -101,6 +104,15 @@ public class BasicUserController {
         }
 
     }
+
+    @PostMapping("/signUp/step1/checkEmail")
+    public ResponseEntity<String> basicUserEmailCheck(@RequestBody Map<String, String> request) throws Exception {
+        String mail = request.get("mail");
+        log.info("basicUserEmailCheck >> {}" , mail);
+        String confirm = mailService.sendSimpleMessage(mail);
+        return ResponseEntity.ok(confirm);
+    }
+
     @PostMapping("/signUp/step2")
     public ResponseEntity basicUserSignUpProfileUpload(@RequestParam("profileIMG") MultipartFile profileIMG,
                                                        @RequestParam("id") String id,
