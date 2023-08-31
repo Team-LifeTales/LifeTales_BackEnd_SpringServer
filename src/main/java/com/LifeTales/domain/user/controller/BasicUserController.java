@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -40,9 +41,7 @@ public class BasicUserController {
         return ResponseEntity.ok(token);
     }
 
-
-
-    @PostMapping("/signUp/detail")
+    @PostMapping("/signUp/step1")
     public ResponseEntity basicUserSignUp(@RequestBody UserSignUpDTO signUpData) {
         log.info("basicUserSignUp Start - need Data \nid : {} , PWD : {}, NickName : {} , " +
                 "Name : {} , Birthday ; {} , PhoneNumber : {} , email : {}" +
@@ -88,13 +87,21 @@ public class BasicUserController {
             log.info("UserSignUp validation failed: {}", returnValidText);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(returnValidText);
         }
-
-
-
+    }
+    @PostMapping("/signUp/step1/checkId")
+    public ResponseEntity<Boolean> basicUserAvailableID(@RequestBody Map<String, String> request){
+        String userId = request.get("userId");
+        log.info("basicUserAvailableID >> {}" , userId);
+        if(userIdChecker.doesIdExist(userId)){
+            log.info("이미존재하는 아이디 ");
+            return ResponseEntity.ok(false);
+        }else{
+            log.info("사용가능 아이디 ");
+            return ResponseEntity.ok(true);
+        }
 
     }
-
-    @PostMapping("/signUp/profile_introduce")
+    @PostMapping("/signUp/step2")
     public ResponseEntity basicUserSignUpProfileUpload(@RequestParam("profileIMG") MultipartFile profileIMG,
                                                        @RequestParam("id") String id,
                                                        @RequestParam("intro") String intro) throws IOException {
@@ -134,7 +141,7 @@ public class BasicUserController {
 
     }
 
-    @PostMapping("/signUp/Join_family")
+    @PostMapping("/signUp/step3")
     public ResponseEntity basicUserSignUpJoinFamily(@RequestBody UserSignUpStep3DTO signUpData){
         log.info("basicUserSignUpJoinFamily >> {}" ,signUpData.getId());
 
