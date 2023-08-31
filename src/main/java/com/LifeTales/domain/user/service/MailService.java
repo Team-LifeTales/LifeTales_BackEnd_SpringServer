@@ -34,23 +34,27 @@ public class MailService {
         System.out.println("보내는 대상 : "+ to);
         System.out.println("인증 번호 : "+ePw);
         MimeMessage  message = emailSender.createMimeMessage();
+        String[] parts = to.split("@");
+        String userName = parts[0];
 
         message.addRecipients(MimeMessage.RecipientType.TO, to);//보내는 대상
-        message.setSubject("이메일 인증 테스트");//제목
+        message.setSubject("LifeTales 안녕하세요 !"+userName+"님");//제목
 
         String msgg="";
-        msgg+= "<div style='margin:20px;'>";
-        msgg+= "<h1> 안녕하세요 LifeTales입니다. </h1>";
-        msgg+= "<br>";
-        msgg+= "<p>아래 코드를 복사해 입력해주세요<p>";
-        msgg+= "<br>";
-        msgg+= "<p>감사합니다.<p>";
-        msgg+= "<br>";
-        msgg+= "<div align='center' style='border:1px solid black; font-family:verdana';>";
-        msgg+= "<h3 style='color:blue;'>회원가입 인증 코드입니다.</h3>";
-        msgg+= "<div style='font-size:130%'>";
-        msgg+= "CODE : <strong>";
-        msgg+= ePw+"</strong><div><br/> ";
+        msgg+= " <div class=\"container\" style=\"display: flex; justify-content: center; font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;\">";
+        msgg+= "<div class=\"box\" style=\"display: flex; flex-direction: column; border: 1px solid rgba(0, 0, 0, 0.25); height: 600px; width: 800px; text-align: center; background:url(https://cdn.pixabay.com/photo/2023/03/25/21/15/clover-7876940_1280.png); background-size:cover; padding: 1em; box-shadow: rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px;\">";
+        msgg+= "<div class=\"text\" style=\"flex: 1;\">";
+        msgg+= "<h1 style=\"color: rgba(0, 0, 0, 0.9); font-size: 44px;\">LifeTales - 회원가입 인증</h1>";
+        msgg+= "<p style=\"color: rgba(0, 0, 0, 0.8); font-size: 20px;\">안녕하세요 LifeTales 인증 센터입니다."+userName+"님의 가입을 진심으로 환영합니다.</p>";
+        msgg+= "</div>";
+        msgg+= "<div class=\"text\" style=\"flex: 1;\">";
+        msgg+= "<p style=\"color: rgba(0, 0, 0, 0.8); font-size: 20px;\">아래 인증 코드를 회원가입란의 입력 해주십시오.</p>";
+        msgg+= "</div>";
+        msgg+= " <div class=\"text-box\" style=\"flex: 1; border: 1px solid rgba(0, 0, 0, 0.4); box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px;\">";
+        msgg+= "<h3 style=\"font-size: 32px;\">회원 인증 코드</h3>";
+        msgg+= "<p style=\"font-size: 20px;\">CODE : <strong>"+ePw+"</strong></p> ";
+        msgg+= "</div>";
+        msgg+= "</div>";
         msgg+= "</div>";
         message.setText(msgg, "utf-8", "html");//내용
         message.setFrom(new InternetAddress("lifetales56@gmail.com","lfeTales"));//보내는 사람
