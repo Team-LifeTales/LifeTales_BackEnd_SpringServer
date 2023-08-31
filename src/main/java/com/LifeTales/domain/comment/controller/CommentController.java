@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/comment")
+@CrossOrigin(origins = {"http://172.20.144.1:3000", "http://3.39.251.34:3000"})
 public class CommentController {
     private final ObjectMapper objectMapper;
     private final CommentService commentService;
