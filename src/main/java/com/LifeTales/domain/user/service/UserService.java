@@ -20,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,6 +44,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final FamilyRepository familyRepository;
 
+    private  PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private final AmazonS3Client amazonS3Client;
     private final UserIdChecker userIdChecker;
@@ -74,7 +77,7 @@ public class UserService {
 //            log.info("들어온값 id {} , password {}" , id , password);
 //            log.info("찾은값 id {} , password {}" , id );
             //검증...
-            if(user.getPwd().equals(password)){
+            if(passwordEncoder.matches(password, user.getPwd())){
                 log.info("login Service >> {} .. success" ,  id);
                 return JwtUtil.createJwtToken(id , secretKey,expiredMs);
             }else{
@@ -89,15 +92,18 @@ public class UserService {
 
 
     public String user_signUp_service(@RequestBody UserSignUpDTO userSignUpdata){
+        String encodedPassword = passwordEncoder.encode(userSignUpdata.getPwd());
+
         try {
             userRepository.save(
                     User.builder()
                             .id(userSignUpdata.getId())
-                            .pwd(userSignUpdata.getPwd())
+                            .pwd(encodedPassword)
                             .name(userSignUpdata.getName())
                             .nickName(userSignUpdata.getNickName())
                             .birthDay(userSignUpdata.getBirthDay().atStartOfDay())
                             .phoneNumber(userSignUpdata.getPhoneNumber())
+                            .email(userSignUpdata.getEmail())
                             .role(UserRole.TEMP)
                             .build()
             );
@@ -324,6 +330,21 @@ public class UserService {
 
         return null;
     }
+
+    public User changePassword(Long userId, String newPassword) {
+        User user = entityManager.find(User.class, userId);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found with ID: " + userId);
+        }
+
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPwd(encodedPassword);
+        entityManager.merge(user);
+
+        return user;
+    }
+
+
 
 
 }

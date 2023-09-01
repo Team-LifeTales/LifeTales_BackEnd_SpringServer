@@ -17,7 +17,9 @@ import java.time.LocalDateTime;
 @Table(
         name = "User",
         schema = "LifeTales_Spring_Server",
-        uniqueConstraints = @UniqueConstraint(columnNames = "ID")
+        uniqueConstraints = {
+                @UniqueConstraint(name = "unique_id_email", columnNames = {"ID", "email"})
+        }
 )
 @Data
 public class User {
@@ -27,7 +29,9 @@ public class User {
     private Long seq;
     @Column(name = "ID" , nullable = false , length = 30 , unique = true)
     private String id;
-    @Column(name = "PWD" , nullable = false , length = 30)
+    @Column(name = "EMAIL" , nullable = false , length = 30 , unique = true)
+    private String email;
+    @Column(name = "PWD" , nullable = false , length = 200)
     private String pwd;
     @Column(name = "NAME" , nullable = false , length = 10)
     private String name;
