@@ -29,16 +29,14 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
         log.info("authorization : {}" ,authorization);
-
-        //token
-        String token = authorization;
-
         if(authorization == null){
             log.error("인증토큰 확인하세요");
             filterChain.doFilter(request , response);
             return;
         }
 
+        //token
+        String token = authorization.substring("Bearer ".length());
 
         if(JwtUtil.isExpired(token,secretKey)){
             log.info("Token 기간만료");
