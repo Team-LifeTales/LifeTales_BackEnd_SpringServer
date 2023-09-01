@@ -19,11 +19,13 @@ public class JwtUtil {
         Claims claims = Jwts.claims();
         claims.put("id" , id);
 
-        return Jwts.builder()
+        String token = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiredMs))
-                .signWith(SignatureAlgorithm.HS256 , secretKey)
+                .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
+
+        return "Bearer " + token; // "Bearer " 접두사 추가
     }
 }

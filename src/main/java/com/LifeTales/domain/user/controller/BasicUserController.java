@@ -5,6 +5,7 @@ import com.LifeTales.domain.user.repository.DTO.UserSignInDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep3DTO;
+import com.LifeTales.domain.user.service.MailService;
 import com.LifeTales.domain.user.service.UserService;
 import com.LifeTales.global.Validator.UserSignUpValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,20 +16,24 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/users/basic")
+@CrossOrigin(origins = {"http://172.20.144.1:3000", "http://3.39.251.34:3000"})
 public class BasicUserController {
     private final ObjectMapper objectMapper;
     private final UserService userService;
     private final UserSignUpValidator uservalidator;
+    private final MailService mailService;
 
     private final UserIdChecker userIdChecker;
-    public BasicUserController(ObjectMapper objectMapper, UserService userService, UserSignUpValidator uservalidator, UserIdChecker userIdChecker) {
+    public BasicUserController(ObjectMapper objectMapper, UserService userService, UserSignUpValidator uservalidator, MailService mailService, UserIdChecker userIdChecker) {
         this.objectMapper = objectMapper;
         this.userService = userService;
         this.uservalidator = uservalidator;
+        this.mailService = mailService;
         this.userIdChecker = userIdChecker;
     }
 
@@ -40,9 +45,7 @@ public class BasicUserController {
         return ResponseEntity.ok(token);
     }
 
-
-
-    @PostMapping("/signUp/detail")
+    @PostMapping("/signUp/step1")
     public ResponseEntity basicUserSignUp(@RequestBody UserSignUpDTO signUpData) {
         log.info("basicUserSignUp Start - need Data \nid : {} , PWD : {}, NickName : {} , " +
                 "Name : {} , Birthday ; {} , PhoneNumber : {} , email : {}" +
@@ -88,13 +91,30 @@ public class BasicUserController {
             log.info("UserSignUp validation failed: {}", returnValidText);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(returnValidText);
         }
-
-
-
+    }
+    @PostMapping("/signUp/step1/checkId")
+    public ResponseEntity<Boolean> basicUserAvailableID(@RequestBody Map<String, String> request){
+        String userId = request.get("userId");
+        log.info("basicUserAvailableID >> {}" , userId);
+        if(userIdChecker.doesIdExist(userId)){
+            log.info("이미존재하는 아이디 ");
+            return ResponseEntity.ok(false);
+        }else{
+            log.info("사용가능 아이디 ");
+            return ResponseEntity.ok(true);
+        }
 
     }
 
-    @PostMapping("/signUp/profile_introduce")
+    @PostMapping("/signUp/step1/checkEmail")
+    public ResponseEntity<String> basicUserEmailCheck(@RequestBody Map<String, String> request) throws Exception {
+        String mail = request.get("mail");
+        log.info("basicUserEmailCheck >> {}" , mail);
+        String confirm = mailService.sendSimpleMessage(mail);
+        return ResponseEntity.ok(confirm);
+    }
+
+    @PostMapping("/signUp/step2")
     public ResponseEntity basicUserSignUpProfileUpload(@RequestParam("profileIMG") MultipartFile profileIMG,
                                                        @RequestParam("id") String id,
                                                        @RequestParam("intro") String intro) throws IOException {
@@ -134,7 +154,7 @@ public class BasicUserController {
 
     }
 
-    @PostMapping("/signUp/Join_family")
+    @PostMapping("/signUp/step3")
     public ResponseEntity basicUserSignUpJoinFamily(@RequestBody UserSignUpStep3DTO signUpData){
         log.info("basicUserSignUpJoinFamily >> {}" ,signUpData.getId());
 

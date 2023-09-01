@@ -3,7 +3,9 @@ plugins {
 	id 'org.springframework.boot' version '2.7.14'
 	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
 }
-
+jar {
+	enabled = false
+}
 group = 'com.LifeTales'
 version = '0.0.1-SNAPSHOT'
 
@@ -22,6 +24,7 @@ repositories {
 }
 
 dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-mail' //email 인증을 위한 라이브러리
 	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE' //s3 aws access
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310' // java.time.LocalDate 지원용
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.4' //ObjectMapper
