@@ -21,4 +21,5 @@ public interface FamilyRepository extends JpaRepository<Family, Long> {
 
     Family findByNickName(String nickName);
     List<Family> findByNickNameContaining(String nickName);
+
 }

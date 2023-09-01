@@ -55,6 +55,7 @@ public class FeedController {
                 try {
                     byte[] imageBytes = uploadIMG.getBytes();
                     imageBytesList.add(imageBytes);
+                    log.info("FeedUploadImageCheck - True");
                 } catch (IOException e) {
                     e.printStackTrace();
                     // 처리 중 오류가 발생할 경우 예외 처리
@@ -64,6 +65,7 @@ public class FeedController {
             uploadData.setUploadImages(imageBytesList);
         } else {
             uploadData.setUploadImages(null);
+            log.info("FeedUploadImageCheck - False");
         }
 
 
