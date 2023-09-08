@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/users/basic/update")
 @CrossOrigin(origins = {"http://172.20.144.1:3000", "http://3.39.251.34:3000"})
 public class BasicUserUpdateController {
+
+
     private final UserService userService;
     private final UserRepository userRepository;
     private PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -34,15 +36,16 @@ public class BasicUserUpdateController {
     //Password Update
     @PostMapping("/password")
     public ResponseEntity basicUserUpdatePassWord(@RequestBody User.UserUpdate__Password userData){
-        log.info("user Password Update {} {}" , userData.getId() , userData.getPwd());
+        log.info("user Password Update {}" , userData.getId());
         if(userRepository.existsById(userData.getId())){
             //true
             if(passwordEncoder.matches(userData.getPwd() , userRepository.findById(userData.getId()).getPwd() )){
                 //passWord true
-                if(userService.update_password_service(userData.getId() , userData.getNewPwd())){
+                String return_text = userService.update_user_service(userData.getId() , "password",userData.getNewPwd());
+                if((return_text).equals("success")){
                     return ResponseEntity.ok("update Success");
                 }else{
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버에러 - db");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(return_text);
                 }
             }
             else{
@@ -55,17 +58,44 @@ public class BasicUserUpdateController {
         }
     }
     @PostMapping("/nickName")
-    public ResponseEntity basicUserUpdateNickName(@RequestBody User.UserUpdate__Password userData){
-        return null;
+    public ResponseEntity basicUserUpdateNickName(@RequestBody User.UserUpdate__NickName userData){
+        log.info("user NickName Update {}" , userData.getId());
+        if(userRepository.existsById(userData.getId())){
+            String return_text = userService.update_user_service(userData.getId() , "nickName",userData.getNickName());
+
+            if((return_text).equals("success")){
+                return ResponseEntity.ok("update Success");
+            }else{
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(return_text);
+            }
+
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("not exist id");
+        }
     }
+
+    @PostMapping("/intro")
+    public ResponseEntity basicUserUpdateIntro(@RequestBody User.UserUpdate__Intro userData){
+        log.info("user Intro Update {}" , userData.getId());
+        if(userRepository.existsById(userData.getId())){
+            String return_text = userService.update_user_service(userData.getId() , "intro",userData.getIntroduce());
+
+            if((return_text).equals("success")){
+                return ResponseEntity.ok("update Success");
+            }else{
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(return_text);
+            }
+
+        }else{
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("not exist id");
+        }
+    }
+
     @PostMapping("/profile")
     public ResponseEntity basicUserUpdateProfile(@RequestBody User.UserUpdate__Password userData){
         return null;
     }
-    @PostMapping("/intro")
-    public ResponseEntity basicUserUpdateIntro(@RequestBody User.UserUpdate__Password userData){
-        return null;
-    }
+
 
 
 

@@ -81,4 +81,48 @@ public class User {
             this.newPwd = newPwd;
         }
     }
+
+    @Getter
+    @Setter
+    public static class UserUpdate__NickName {
+        private String id;
+        private String nickName;
+        public  UserUpdate__NickName() {
+
+        }
+        public  UserUpdate__NickName(String id, String nickName) {
+            this.id = id;
+            this.nickName = nickName;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class UserUpdate__Profile {
+        private String id;
+        private String pwd;
+        private String newPwd;
+        public  UserUpdate__Profile() {
+
+        }
+        public  UserUpdate__Profile(String id, String pwd , String newPwd) {
+            this.id = id;
+            this.pwd = pwd;
+            this.newPwd = newPwd;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class UserUpdate__Intro {
+        private String id;
+        private String introduce;
+        public  UserUpdate__Intro() {
+
+        }
+        public  UserUpdate__Intro(String id, String introduce) {
+            this.id = id;
+            this.introduce= introduce;
+        }
+    }
 }

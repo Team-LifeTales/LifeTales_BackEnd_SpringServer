@@ -332,17 +332,78 @@ public class UserService {
         return null;
     }
 
-    public boolean update_password_service(String id , String newPassword){
-        log.info("update_password_service Start : id {}",id);
-        try{
+    public String update_user_service(String id , String selectService , String newValue){
+        log.info("update_user_service {}", id);
+        try {
             Long userSeq = userUtil.findUserSeqForId(id);
             User user = entityManager.find(User.class,userSeq);
-            if (user == null) {
-                throw new IllegalArgumentException("User not found with ID: " + userSeq);
-            }
 
+            if (user == null) {
+                throw new IllegalArgumentException("User not found with ID: " + user.getId());
+            }else{
+                switch (selectService){
+                    case "password":
+                        //password Update
+                        log.info("update_password_service Start : id {}",id);
+                        if(update_password_service(user , newValue)){
+                            return "success";
+                        }else{
+                            return "fail Update Password";
+                        }
+
+                    case "nickName":
+                        log.info("update_nickName_service {}", id);
+                        if(update_nickName_service(user , newValue)){
+                            return "success";
+                        }else{
+                            return "fail Update nickName";
+                        }
+                    case "intro":
+                        log.info("update_intro_service {}", id);
+                        if(update_intro_service(user , newValue)){
+                            return "success";
+                        }else{
+                            return "fail intro intro";
+                        }
+
+                    default:
+                        return "Invalid service selection";
+                }
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+            return "fail find User";
+        }
+
+
+    }
+
+    private boolean update_password_service(User user , String newPassword){
+        try{
             String encodedPassword = passwordEncoder.encode(newPassword);
             user.setPwd(encodedPassword);
+            entityManager.merge(user);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean update_nickName_service(User user , String newNickName){
+        try{
+            user.setNickName(newNickName);
+            entityManager.merge(user);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean update_intro_service(User user , String newIntro){
+        try{
+            user.setIntroduce(newIntro);
             entityManager.merge(user);
             return true;
         }catch (Exception e) {
