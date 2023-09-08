@@ -66,5 +66,19 @@ public class User {
     @Column(name = "IS_DELETED" , nullable = false)
     private boolean isDELETED;
 
+    @Getter
+    @Setter
+    public static class UserUpdate__Password {
+        private String id;
+        private String pwd;
+        private String newPwd;
+        public  UserUpdate__Password() {
 
+        }
+        public  UserUpdate__Password(String id, String pwd , String newPwd) {
+            this.id = id;
+            this.pwd = pwd;
+            this.newPwd = newPwd;
+        }
+    }
 }

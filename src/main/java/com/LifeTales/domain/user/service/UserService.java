@@ -12,6 +12,7 @@ import com.LifeTales.domain.user.repository.DTO.UserSignUpStep3DTO;
 import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.global.s3.RequestIMGService;
 import com.LifeTales.global.util.JwtUtil;
+import com.LifeTales.util.UserUtil;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -43,7 +44,7 @@ public class UserService {
     @Autowired
     private final UserRepository userRepository;
     private final FamilyRepository familyRepository;
-
+    private final UserUtil userUtil;
     private  PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private final AmazonS3Client amazonS3Client;
@@ -331,19 +332,24 @@ public class UserService {
         return null;
     }
 
-    public User changePassword(Long userId, String newPassword) {
-        User user = entityManager.find(User.class, userId);
-        if (user == null) {
-            throw new IllegalArgumentException("User not found with ID: " + userId);
+    public boolean update_password_service(String id , String newPassword){
+        log.info("update_password_service Start : id {}",id);
+        try{
+            Long userSeq = userUtil.findUserSeqForId(id);
+            User user = entityManager.find(User.class,userSeq);
+            if (user == null) {
+                throw new IllegalArgumentException("User not found with ID: " + userSeq);
+            }
+
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPwd(encodedPassword);
+            entityManager.merge(user);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
-
-        String encodedPassword = passwordEncoder.encode(newPassword);
-        user.setPwd(encodedPassword);
-        entityManager.merge(user);
-
-        return user;
     }
-
 
 
 
