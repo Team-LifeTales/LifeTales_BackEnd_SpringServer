@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
     connectSocket();
 
     function connectSocket() {
-        socket = new WebSocket("ws://localhost:8080/websocket-FamilySearch");
+        socket = new WebSocket("ws://localhost:8080/api/v1/users/basic/signUp/websocket-FamilySearch");
 
         socket.onopen = (event) => {
             console.log("WebSocket connected");

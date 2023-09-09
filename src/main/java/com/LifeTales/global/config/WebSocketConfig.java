@@ -27,6 +27,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
          */
         registry.addHandler(new SearchWebSocketHandler(), "/websocket-endpoint");
 
-        registry.addHandler(new FamilySearchWebSocketHandler(findSocketService), "/websocket-FamilySearch");
+        registry.addHandler(new FamilySearchWebSocketHandler(findSocketService), "/api/v1/users/basic/signUp/websocket-FamilySearch");
     }
 }

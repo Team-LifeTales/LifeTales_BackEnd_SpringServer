@@ -29,6 +29,12 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
         log.info("authorization : {}" ,authorization);
+
+        if (shouldSkipTokenValidation(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if(authorization == null){
             log.error("인증토큰 확인하세요");
             filterChain.doFilter(request , response);
@@ -59,5 +65,15 @@ public class JwtFilter extends OncePerRequestFilter {
         authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         filterChain.doFilter(request, response);
+    }
+
+
+    private boolean shouldSkipTokenValidation(HttpServletRequest request) {
+        String requestURI = request.getRequestURI();
+        // 특정 URL 패턴에 대한 요청인 경우 true 반환하여 토큰 검증을 스킵
+        boolean isSignUpPath = requestURI.contains("/api/v1/users/basic/signUp/**");
+        boolean isFamilySearchHtml = requestURI.contains("/familySearch.html");
+
+        return isSignUpPath || isFamilySearchHtml;
     }
 }

@@ -58,4 +58,17 @@ public class FamilySearchWebSocketHandler extends TextWebSocketHandler {
         session.sendMessage(new TextMessage(familyData));
 
     }
+
+
+    @Override
+    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        // 클라이언트의 IP 주소 얻기
+        String clientIpAddress = session.getRemoteAddress().getHostName();
+
+        // IP 주소를 로그에 출력
+        System.out.println("WebSocket connection established with IP: " + clientIpAddress);
+
+        // 연결이 성공했을 때 추가 작업 수행
+        // ...
+    }
 }
