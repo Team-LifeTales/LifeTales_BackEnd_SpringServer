@@ -18,7 +18,7 @@ public class FamilySearchWebSocketHandler extends TextWebSocketHandler {
 
     public FamilySearchWebSocketHandler(FindSocketService findSocketService) {
         this.findSocketService = findSocketService;
-    }
+}
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {

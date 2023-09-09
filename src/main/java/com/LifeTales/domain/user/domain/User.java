@@ -17,7 +17,9 @@ import java.time.LocalDateTime;
 @Table(
         name = "User",
         schema = "LifeTales_Spring_Server",
-        uniqueConstraints = @UniqueConstraint(columnNames = "ID")
+        uniqueConstraints = {
+                @UniqueConstraint(name = "unique_id_email", columnNames = {"ID", "email"})
+        }
 )
 @Data
 public class User {
@@ -27,7 +29,9 @@ public class User {
     private Long seq;
     @Column(name = "ID" , nullable = false , length = 30 , unique = true)
     private String id;
-    @Column(name = "PWD" , nullable = false , length = 30)
+    @Column(name = "EMAIL" , nullable = false , length = 30 , unique = true)
+    private String email;
+    @Column(name = "PWD" , nullable = false , length = 200)
     private String pwd;
     @Column(name = "NAME" , nullable = false , length = 10)
     private String name;
@@ -62,5 +66,55 @@ public class User {
     @Column(name = "IS_DELETED" , nullable = false)
     private boolean isDELETED;
 
+    @Getter
+    @Setter
+    public static class UserUpdate__Password {
+        private String pwd;
+        private String newPwd;
+        public  UserUpdate__Password() {
 
+        }
+        public  UserUpdate__Password(String pwd , String newPwd) {
+            this.pwd = pwd;
+            this.newPwd = newPwd;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class UserUpdate__NickName {
+        private String nickName;
+        public  UserUpdate__NickName() {
+
+        }
+        public  UserUpdate__NickName(String nickName) {
+            this.nickName = nickName;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class UserUpdate__Profile {
+        private String pwd;
+        private String newPwd;
+        public  UserUpdate__Profile() {
+
+        }
+        public  UserUpdate__Profile(String pwd , String newPwd) {
+            this.pwd = pwd;
+            this.newPwd = newPwd;
+        }
+    }
+
+    @Getter
+    @Setter
+    public static class UserUpdate__Intro {
+        private String introduce;
+        public  UserUpdate__Intro() {
+
+        }
+        public  UserUpdate__Intro(String introduce) {
+            this.introduce= introduce;
+        }
+    }
 }

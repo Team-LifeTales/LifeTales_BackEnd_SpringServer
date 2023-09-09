@@ -12,16 +12,22 @@ import com.LifeTales.domain.user.repository.DTO.UserSignUpStep3DTO;
 import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.global.s3.RequestIMGService;
 import com.LifeTales.global.util.JwtUtil;
+import com.LifeTales.util.UserUtil;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.persistence.EntityManager;
@@ -29,6 +35,7 @@ import javax.persistence.PersistenceContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Optional;
 
 @Slf4j
@@ -41,7 +48,8 @@ public class UserService {
     @Autowired
     private final UserRepository userRepository;
     private final FamilyRepository familyRepository;
-
+    private final UserUtil userUtil;
+    private  PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     private final AmazonS3Client amazonS3Client;
     private final UserIdChecker userIdChecker;
@@ -74,7 +82,7 @@ public class UserService {
 //            log.info("들어온값 id {} , password {}" , id , password);
 //            log.info("찾은값 id {} , password {}" , id );
             //검증...
-            if(user.getPwd().equals(password)){
+            if(passwordEncoder.matches(password, user.getPwd())){
                 log.info("login Service >> {} .. success" ,  id);
                 return JwtUtil.createJwtToken(id , secretKey,expiredMs);
             }else{
@@ -89,15 +97,18 @@ public class UserService {
 
 
     public String user_signUp_service(@RequestBody UserSignUpDTO userSignUpdata){
+        String encodedPassword = passwordEncoder.encode(userSignUpdata.getPwd());
+
         try {
             userRepository.save(
                     User.builder()
                             .id(userSignUpdata.getId())
-                            .pwd(userSignUpdata.getPwd())
+                            .pwd(encodedPassword)
                             .name(userSignUpdata.getName())
                             .nickName(userSignUpdata.getNickName())
                             .birthDay(userSignUpdata.getBirthDay().atStartOfDay())
                             .phoneNumber(userSignUpdata.getPhoneNumber())
+                            .email(userSignUpdata.getEmail())
                             .role(UserRole.TEMP)
                             .build()
             );
@@ -116,44 +127,25 @@ public class UserService {
             return "RuntimeException";
         }
     }
-
     public String user_signUp_step2_service(@RequestBody UserSignUpStep2DTO data){
         //프로파일 이미지 & 소개글
         log.info("user_signUp_step2_service Start >> id {}",data.getId() );
         if(data.getProfileIMG() != null){
             //프로파일 이미지가 있는경우
-            try{
-                String fileName = "UserProfile-"+data.getId();
-                String fileUrl= "https://" + bucket + "/lifeTales" +fileName;
-                byte[] imageData = data.getProfileIMG();
-                String mimeType = "image/jpeg";
-
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentLength(imageData.length);
-                metadata.setContentType(mimeType);
-
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(imageData);
-
-                amazonS3Client.putObject(bucket, fileName, inputStream, metadata);
-                User user  = userRepository.findSeqById(data.getId());
-                Long userSeq = user.getSeq();
-                Optional<String> fileUrlOptional = Optional.of(fileUrl);
-                boolean checkMergeUserProfile = user_signUp_step2_db_service(data.getIntro() , fileUrlOptional ,userSeq);
+            String return_text = user_img_upload_s3(data.getId() , data.getProfileIMG());
+            if(return_text.equals("fail - s3 upload fail") || return_text.equals("Error") ){
+                return return_text;
+            }else{
+                Long userSeq = userUtil.findUserSeqForId(data.getId());
+                boolean checkMergeUserProfile = user_signUp_step2_db_service(data.getIntro() , return_text.describeConstable(),userSeq);
                 if(checkMergeUserProfile){
                     return "Success";
                 }else{
                     return "Error - merge Error";
                 }
-
-            }catch (SdkClientException e) {
-                log.info("fail - s3 upload fail" + e);
-                return "fail - s3 upload fail";
-
-            }catch (Exception e) {
-                // 기타 예외 처리
-                e.printStackTrace();
-                return "Error";
             }
+
+
         }else{
             //없는 경우
             return "fail - s3 upload fail";
@@ -324,6 +316,183 @@ public class UserService {
 
         return null;
     }
+
+    public String update_user_service(String id , String selectService , String newValue){
+        log.info("update_user_service {}", id);
+        try {
+            Long userSeq = userUtil.findUserSeqForId(id);
+            User user = entityManager.find(User.class,userSeq);
+
+            if (user == null) {
+                throw new IllegalArgumentException("User not found with ID: " + user.getId());
+            }else{
+                switch (selectService){
+                    case "password":
+                        //password Update
+                        log.info("update_password_service Start : id {}",id);
+                        if(update_password_service(user , newValue)){
+                            return "success";
+                        }else{
+                            return "fail Update Password";
+                        }
+
+                    case "nickName":
+                        log.info("update_nickName_service {}", id);
+                        if(update_nickName_service(user , newValue)){
+                            return "success";
+                        }else{
+                            return "fail Update nickName";
+                        }
+                    case "intro":
+                        log.info("update_intro_service {}", id);
+                        if(update_intro_service(user , newValue)){
+                            return "success";
+                        }else{
+                            return "fail intro intro";
+                        }
+                    case "profile":
+                        log.info("update_profile_service {}", id);
+                        if(update_profile_service(user , newValue)){
+                            return "success";
+                        }else{
+                            return "fail intro intro";
+                        }
+                    default:
+                        return "Invalid service selection";
+                }
+            }
+        }catch (Exception e) {
+            e.printStackTrace();
+            return "fail find User";
+        }
+
+
+    }
+
+    private boolean update_password_service(User user , String newPassword){
+        try{
+            String encodedPassword = passwordEncoder.encode(newPassword);
+            user.setPwd(encodedPassword);
+            entityManager.merge(user);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean update_nickName_service(User user , String newNickName){
+        try{
+            user.setNickName(newNickName);
+            entityManager.merge(user);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    private boolean update_intro_service(User user , String newIntro){
+        try{
+            user.setIntroduce(newIntro);
+            entityManager.merge(user);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    private boolean update_profile_service(User user , String newProfile){
+        try{
+            user.setProfileIMG(newProfile);
+            entityManager.merge(user);
+            return true;
+        }catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public String update_profile_S3_service(String id ,byte[] imageData ){
+       String imgURL =  userRepository.findById(id).getProfileIMG();
+       if(imgURL.isEmpty()){
+           String return_text = user_img_upload_s3(id , imageData);
+           //이미지 등록이 없는 경우.. 바로 등록..
+           if(return_text.equals("fail - s3 upload fail") || return_text.equals("Error") ){
+               return return_text;
+           }else{
+              return update_user_service(id , "profile" , return_text);
+           }
+
+       }else{
+           //이미지가 이미 있는 경우 삭제후 .. 등록
+           log.info("img url check {}" , imgURL); //체크용 삭제할것
+           InputStream imageStream = new ByteArrayInputStream(imageData);
+           if(user_img_update_s3(imgURL , imageStream)){
+                return "success";
+           }else{
+               return "fail";
+           }
+
+       }
+    }
+
+
+    private String user_img_upload_s3(String id, byte[] imageData){
+        try{
+            String fileName = "UserProfile-"+id;
+            String fileUrl= "https://" + bucket + "/" +fileName;
+            String mimeType = "image/jpeg";
+
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(imageData.length);
+            metadata.setContentType(mimeType);
+
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(imageData);
+
+            amazonS3Client.putObject(bucket, fileName, inputStream, metadata);
+            Optional<String> fileUrlOptional = Optional.of(fileUrl);
+            String fileURL = String.valueOf(fileUrlOptional);
+            return fileURL;
+
+        }catch (SdkClientException e) {
+            log.info("fail - s3 upload fail" + e);
+            return "fail - s3 upload fail";
+
+        }catch (Exception e) {
+            // 기타 예외 처리
+            e.printStackTrace();
+            return "Error";
+        }
+    }
+
+    public boolean user_img_update_s3(String imageUrl, InputStream imageStream) {
+        try {
+            String originalValue = imageUrl;
+            String newValue = originalValue.replace("Optional[", "").replace("]", "");
+            log.info(newValue); // 확인용, 필요한 경우 주석 처리 가능
+
+            String[] parts = newValue.split("/");
+
+            String bucketName = parts[2];
+            String fileName = parts[3];
+            String contentType = "image/jpeg"; // JPEG 형식인 경우
+
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(contentType);
+            // S3 버킷에 객체 업로드
+            PutObjectRequest request = new PutObjectRequest(bucketName, fileName, imageStream,metadata);
+            amazonS3Client.putObject(request);
+
+            return true;
+        } catch (Exception e) {
+            // 이미지 업로드 중 오류 발생
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+
 
 
 }
