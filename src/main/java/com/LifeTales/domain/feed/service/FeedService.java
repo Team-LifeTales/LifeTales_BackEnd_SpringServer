@@ -2,11 +2,7 @@ package com.LifeTales.domain.feed.service;
 
 
 import com.LifeTales.common.User.FamilyNicknameChecker;
-import com.LifeTales.common.User.FeedChecker;
 import com.LifeTales.common.User.UserIdChecker;
-import com.LifeTales.domain.comment.domain.Comment;
-import com.LifeTales.domain.comment.domain.CommentRole;
-import com.LifeTales.domain.comment.repository.DTO.SlaveCommentReadDTO;
 import com.LifeTales.domain.family.domain.Family;
 import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.feed.domain.Feed;
@@ -41,12 +37,8 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
-import java.util.random.*;
 import java.io.ByteArrayInputStream;
-
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -65,7 +57,6 @@ public class FeedService {
     private String bucket;
     private final FamilyNicknameChecker familySeqChecker;
     private final UserIdChecker userIdChecker;
-    private final FeedChecker feedSeqChecker;
     private final RequestIMGService imgService;
 
     @PersistenceContext
@@ -146,7 +137,7 @@ public class FeedService {
          * */
 
         log.info("getFeedDataForFamily Start >> {}",nickname);
-        boolean nickNameCheck = feedSeqChecker.doesFamilyNicknameExist(nickname); // family 존재하는지 확인
+        boolean nickNameCheck = familyRepository.existsByNickName(nickname);
         log.info("getFeedDataForFamily checkId result >> {}" , nickNameCheck);
         if(nickNameCheck){
             log.info("getFeedDataForFamily checkId Success >> {}" , nickname);
@@ -209,7 +200,7 @@ public class FeedService {
          * */
 
         log.info("getFeedDataForUser Start >> {}",id);
-        boolean idCheck = feedSeqChecker.doesUserIdExist(id); // user 존재하는지 확인
+        boolean idCheck = userIdChecker.doesIdExist(id); // user 존재하는지 확인
         log.info("getFeedDataForUser checkId result >> {}" , idCheck);
         if(idCheck){
             log.info("getFeedDataForUser checkId Success >> {}" , id);
@@ -267,7 +258,7 @@ public class FeedService {
          * */
 
         log.info("getFeedDeatil Start >> {}",feedSeq);
-        boolean feedSeqCheck = feedSeqChecker.doesSeqExist(feedSeq);
+        boolean feedSeqCheck = feedRepository.existsBySeq(feedSeq);
         log.info("getFeedDetail checkSeq result >> {}" , feedSeqCheck);
         if(feedSeqCheck){
             log.info("getFeedDetail checkSeq Success >> {}" , feedSeqCheck);

@@ -1,9 +1,16 @@
 package com.LifeTales.domain.family.controller;
 
 import com.LifeTales.common.User.FamilyNicknameChecker;
+import com.LifeTales.common.User.UserIdChecker;
+import com.LifeTales.domain.family.domain.Family;
+import com.LifeTales.domain.family.repository.DTO.FamilyDataDTO;
 import com.LifeTales.domain.family.repository.DTO.FamilySignUpDTO;
+import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.family.service.FamilyService;
+import com.LifeTales.domain.user.domain.User;
+import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.global.Validator.FamilySignUpValidator;
+import com.LifeTales.global.util.UseTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -11,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 @Slf4j
@@ -22,19 +30,28 @@ public class FamilyController {
     private final FamilyService familyService;
     private final FamilySignUpValidator familyValidator;
 
+    private FamilyRepository familyRepository;
+    private final UseTokenUtil tokenUtil;
+    private final UserIdChecker userIdChecker;
+
+    private final UserRepository userRepository;
     private final FamilyNicknameChecker familyNicknameChecker;
-    public FamilyController(ObjectMapper objectMapper, FamilyService familyService, FamilySignUpValidator familyValidator, FamilyNicknameChecker familyNicknameChecker) {
+    public FamilyController(ObjectMapper objectMapper, FamilyService familyService, FamilySignUpValidator familyValidator, UseTokenUtil tokenUtil, UserIdChecker userIdChecker, UserRepository userRepository, FamilyNicknameChecker familyNicknameChecker, FamilyRepository familyRepository) {
         this.objectMapper = objectMapper;
         this.familyService = familyService;
         this.familyValidator = familyValidator;
+        this.tokenUtil = tokenUtil;
+        this.userIdChecker = userIdChecker;
+        this.userRepository = userRepository;
         this.familyNicknameChecker = familyNicknameChecker;
+        this.familyRepository = familyRepository;
     }
 
     @PostMapping("/createFamily/detail")
     public ResponseEntity FamilySignUp(@RequestParam("nickname") String nickname,
                                             @RequestParam(value = "profileIMG", required = false) MultipartFile profileIMG,
                                             @RequestParam("introduce") String introduce,
-                                            @RequestParam("userSeq") Long userSeq) throws IOException {
+                                            @RequestParam("userId") String userId) throws IOException {
         log.info("basicFamilySignUp-Start >> nickName : {}" , nickname);
 
         FamilySignUpDTO signUpData = new FamilySignUpDTO();
@@ -47,7 +64,7 @@ public class FamilyController {
         } //이미지 저장, 없을시 null로 처리
 
         signUpData.setIntroduce(introduce); //intro 추가
-        signUpData.setUserSeq(userSeq); // userSeq추가
+        signUpData.setUserId(userId); // userId추가
         log.info("FamilySignUp data Check - Stat");
         //Validation Start
         String returnValidText  = familyValidator.familySignUpValidate(signUpData);
@@ -58,7 +75,7 @@ public class FamilyController {
 
             // Service (Create Logic Start)
             boolean checkNickNameExists = familyNicknameChecker.doesNickNameExist(nickname); //nickName 존재하는 지
-            boolean checkUserSeqExists = familyNicknameChecker.doesUserSeqExist(userSeq); //user 존재하는 지
+            boolean checkUserSeqExists = userIdChecker.doesIdExist(userId); //user 존재하는 지
             if (!checkNickNameExists && checkUserSeqExists){
                 log.info("FamilySignUp service logic Start");
                 String return_text = familyService.family_signUp_service(signUpData);
@@ -104,4 +121,33 @@ public class FamilyController {
 
     }
 
+    @ResponseBody
+    @GetMapping("home/")
+    public ResponseEntity FamilyHomeData(HttpServletRequest request) throws IOException {
+
+        String id = tokenUtil.findUserIdForJWT(request);
+        if(userIdChecker.doesIdExist(id)){
+            User user = userRepository.findById(id);
+            if (user.getFamilySeq()!= null){
+                Family family = user.getFamilySeq();
+                log.info("lifeTalesFamilyDataGetTest >> id : {}" , family.getNickName());
+                FamilyDataDTO familyDataDTO = familyService.getDataForFamily(family.getNickName());
+                if(familyDataDTO == null){
+                    log.info("null >> ");
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+                }else{
+                    String json = objectMapper.writeValueAsString(familyDataDTO);
+                    log.info(json);
+                    return ResponseEntity.ok(json);
+                }
+            }
+            else{
+                log.info("family not exists");
+            }
+
+        }else{
+            log.info("user not exists");
+        }
+        return null;
+    }
 }

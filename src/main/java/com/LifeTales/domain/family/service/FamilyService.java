@@ -8,7 +8,9 @@ import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.family.domain.Family;
 import com.LifeTales.domain.user.domain.User;
+import com.LifeTales.domain.user.domain.UserRole;
 import com.LifeTales.domain.user.repository.DTO.UserDataDTO;
+import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.global.s3.RequestIMGService;
 import com.amazonaws.SdkClientException;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -40,6 +42,7 @@ public class FamilyService {
     private String bucket;
     private final FamilyNicknameChecker familySeqChecker;
     private final RequestIMGService imgService;
+    private final UserRepository userRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -72,15 +75,16 @@ public class FamilyService {
                 fileName = "profileImage"; // 없는 경우에는 그냥 fileName을 null이라고 해놓음 일단 -> 기본 이미지로 변경하면 될듯
             }
 
-            User user = entityManager.find(User.class , familySignUpdata.getUserSeq());
-            familyRepository.save(
-                    Family.builder()
-                            .nickName(familySignUpdata.getNickName())
-                            .profileIMG(fileName)
-                            .introduce(familySignUpdata.getIntroduce())
-                            .userSeq(user)
-                            .build()
-            );
+            User user = userRepository.findById(familySignUpdata.getUserId());
+            Family family = Family.builder().nickName(familySignUpdata.getNickName())
+                    .profileIMG(fileName)
+                    .introduce(familySignUpdata.getIntroduce())
+                    .userSeq(user)
+                    .build();
+            familyRepository.save(family);
+            user.setFamilySeq(family);
+            user.setRole(UserRole.FAMILY_LEADER);
+            entityManager.merge(user);
             return "Success";
         } catch (DataAccessException ex) {
             // 데이터베이스 예외 처리
@@ -116,7 +120,6 @@ public class FamilyService {
             familyDataDTO.setUserId(familyData.getUserSeq().getId());
             familyDataDTO.setIntroduce(familyData.getIntroduce());
             familyDataDTO.setNickName(familyData.getNickName());
-            familyDataDTO.setFeedDataDTOs(null);
             //s3에 요청하기 전 확인하기
             if(familyData.getProfileIMG() != null){
                 log.info("getDataForUser S3 connect Start");
