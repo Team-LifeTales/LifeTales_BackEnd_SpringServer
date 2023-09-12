@@ -1,6 +1,7 @@
 package com.LifeTales.domain.user.controller;
 
 import com.LifeTales.common.User.UserIdChecker;
+import com.LifeTales.domain.point.service.PointService;
 import com.LifeTales.domain.user.repository.DTO.UserSignInDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpDTO;
 import com.LifeTales.domain.user.repository.DTO.UserSignUpStep2DTO;
@@ -27,13 +28,14 @@ public class BasicUserController {
     private final UserService userService;
     private final UserSignUpValidator uservalidator;
     private final MailService mailService;
-
+    private final PointService pointService;
     private final UserIdChecker userIdChecker;
-    public BasicUserController(ObjectMapper objectMapper, UserService userService, UserSignUpValidator uservalidator, MailService mailService, UserIdChecker userIdChecker) {
+    public BasicUserController(ObjectMapper objectMapper, UserService userService, UserSignUpValidator uservalidator, MailService mailService, PointService pointService, UserIdChecker userIdChecker) {
         this.objectMapper = objectMapper;
         this.userService = userService;
         this.uservalidator = uservalidator;
         this.mailService = mailService;
+        this.pointService = pointService;
         this.userIdChecker = userIdChecker;
     }
 
@@ -68,8 +70,15 @@ public class BasicUserController {
             ResponseEntity<String> responseEntity;
             if ("Success".equals(return_text)) {
                 log.info("UserSignUp service Success , {}", signUpData.getId());
+                String point_text = pointService.make_user_point_store_service(signUpData.getId());
+                if(point_text.equals("point store success")){
+                    responseEntity = ResponseEntity.ok("signUp Success");
+                }else{
+                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("signUp Success BUT "+point_text);
+
+                }
                 // 회원가입 성공한 경우 처리
-                responseEntity = ResponseEntity.ok("signUp Success");
+
             } else if ("DataAccessException".equals(return_text)) {
                 log.info("UserSignUp service DataAccessException , {}", signUpData.getId());
                 // 데이터베이스 예외 발생한 경우 처리

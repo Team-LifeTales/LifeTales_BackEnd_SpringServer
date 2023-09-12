@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsById(String id);
+    boolean existsByEmail(String email);
     User findSeqById(String id);
     List<User> findByIdContaining(String id);
     User findById(String id);

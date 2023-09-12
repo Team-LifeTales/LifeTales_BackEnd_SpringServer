@@ -98,34 +98,38 @@ public class UserService {
 
     public String user_signUp_service(@RequestBody UserSignUpDTO userSignUpdata){
         String encodedPassword = passwordEncoder.encode(userSignUpdata.getPwd());
+        if(userRepository.existsByEmail(userSignUpdata.getEmail())){
+            return "already_email";
+        }else{
+            try {
+                userRepository.save(
+                        User.builder()
+                                .id(userSignUpdata.getId())
+                                .pwd(encodedPassword)
+                                .name(userSignUpdata.getName())
+                                .nickName(userSignUpdata.getNickName())
+                                .birthDay(userSignUpdata.getBirthDay().atStartOfDay())
+                                .phoneNumber(userSignUpdata.getPhoneNumber())
+                                .email(userSignUpdata.getEmail())
+                                .role(UserRole.TEMP)
+                                .build()
+                );
+                return "Success";
+            } catch (DataAccessException ex) {
+                // 데이터베이스 예외 처리
+                log.error("데이터베이스 예외 발생", ex);
+                // 다른 처리 로직 추가
 
-        try {
-            userRepository.save(
-                    User.builder()
-                            .id(userSignUpdata.getId())
-                            .pwd(encodedPassword)
-                            .name(userSignUpdata.getName())
-                            .nickName(userSignUpdata.getNickName())
-                            .birthDay(userSignUpdata.getBirthDay().atStartOfDay())
-                            .phoneNumber(userSignUpdata.getPhoneNumber())
-                            .email(userSignUpdata.getEmail())
-                            .role(UserRole.TEMP)
-                            .build()
-            );
-            return "Success";
-        } catch (DataAccessException ex) {
-            // 데이터베이스 예외 처리
-            log.error("데이터베이스 예외 발생", ex);
-            // 다른 처리 로직 추가
+                return "DataAccessException";
+            } catch (RuntimeException ex) {
+                // 런타임 예외 처리
+                log.error("런타임 예외 발생", ex);
+                // 다른 처리 로직 추가
 
-            return "DataAccessException";
-        } catch (RuntimeException ex) {
-            // 런타임 예외 처리
-            log.error("런타임 예외 발생", ex);
-            // 다른 처리 로직 추가
-
-            return "RuntimeException";
+                return "RuntimeException";
+            }
         }
+
     }
     public String user_signUp_step2_service(@RequestBody UserSignUpStep2DTO data){
         //프로파일 이미지 & 소개글

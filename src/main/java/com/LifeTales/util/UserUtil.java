@@ -26,4 +26,12 @@ public class UserUtil {
         }
     }
 
+    public boolean userExsitsByID(String userId){
+        if(userRepository.existsById(userId)){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
 }
