@@ -52,7 +52,12 @@ public class PointService {
             }
         }
     }
-
+    public void request_detail_point_service(String userId , DetailPointDTO detailPointDTO){
+        /**
+         * userSeq -> pointSeq find
+         * point & ,
+         */
+    }
     public void make_detail_point_service(DetailPointDTO detailPointDTO){
 
     }
