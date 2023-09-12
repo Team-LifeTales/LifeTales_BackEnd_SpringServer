@@ -14,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -21,9 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class PointService {
     private final PointRepository pointRepository;
     private final DetailPointRepository detailPointRepository;
-    private final UserUtil userUtil;
     private final UserRepository userRepository;
-
+    @PersistenceContext
+    private EntityManager entityManager;
     public String make_user_point_store_service(String userId){
         log.info("make_user_point_store_service : user Id : {}" ,userId );
         String return_text = "";
@@ -67,6 +70,21 @@ public class PointService {
             try {
                 Point point = pointRepository.findByUser(user);
                 detailPointDTO.setPoint(point);
+
+                detailPointDTO.setDetailPoint(data.getPoint());
+                detailPointDTO.setPointLog(data.getPointLog());
+                if(make_detail_point_service(detailPointDTO)){
+                    if(merge_point_service(point.getSeq(), detailPointDTO.getDetailPoint())){
+                        //merge Success
+                        return "success";
+                    }else{
+                        //merge fail
+                        return "fail - cant merge point";
+                    }
+                }else{
+                    //point cant find so, value is null
+                    return "point cant save";
+                }
             }catch (Exception e){
                 log.info("{}",e);
                 return "cant find pointData";
@@ -76,14 +94,6 @@ public class PointService {
             return "cant find userData";
         }
 
-        detailPointDTO.setDetailPoint(data.getPoint());
-        detailPointDTO.setPointLog(data.getPointLog());
-
-        if(make_detail_point_service(detailPointDTO)){
-            return "success";
-        }else{
-            return "point cant save";
-        }
     }
     private boolean make_detail_point_service(DetailPointDTO detailPointDTO){
         log.info("make_detail_point_service start");
@@ -102,6 +112,30 @@ public class PointService {
             log.info("{}",e);
             return false;
         }
+
+    }
+
+    private boolean merge_point_service(Long pointSeq , int new_point){
+        log.info("merge_point_service Start");
+        if(pointRepository.existsById(pointSeq)){
+            Point pointEntity = entityManager.find(Point.class,pointSeq);
+            int before_point = new_point + pointEntity.getPoint();
+
+            pointEntity.setPoint(before_point);
+            try {
+                entityManager.merge(pointEntity);
+                log.info("merge_point_service success");
+                return true;
+            }catch (Exception e){
+                log.info("merge_point_service fail");
+                log.info("{}",e);
+                return false;
+            }
+        }else{
+            log.info("merge_point_service cant find point Entity");
+            return false;
+        }
+
 
     }
 }
