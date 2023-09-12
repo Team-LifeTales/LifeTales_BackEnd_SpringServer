@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-        name = "Point",
+        name = "DetailPoint",
         schema = "LifeTales_Spring_Server"
 )
 @Data

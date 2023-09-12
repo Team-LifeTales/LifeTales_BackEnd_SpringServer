@@ -2,8 +2,11 @@ package com.LifeTales.domain.point.domain;
 
 import com.LifeTales.domain.user.domain.User;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Builder
@@ -29,6 +32,14 @@ public class Point {
     private User user;
     @Column(name="POINT")
     private int point;
+    @Column(name = "IS_CREATED" , nullable = false)
+    @CreationTimestamp
+    private LocalDateTime isCreated;
 
+    @Column(name = "IS_UPDATED" , nullable = false)
+    @UpdateTimestamp
+    private LocalDateTime isUpdated;
+    @Column(name = "IS_DELETED" , nullable = false)
+    private boolean isDELETED;
 
 }
