@@ -3,9 +3,12 @@ package com.LifeTales.domain.point.service;
 import com.LifeTales.domain.point.Repository.DetailPointRepository;
 import com.LifeTales.domain.point.Repository.PointRepository;
 import com.LifeTales.domain.point.domain.DTO.DetailPointDTO;
+import com.LifeTales.domain.point.domain.DTO.RequestDetailPointDTO;
+import com.LifeTales.domain.point.domain.DetailPoint;
 import com.LifeTales.domain.point.domain.Point;
 import com.LifeTales.domain.user.domain.User;
 import com.LifeTales.domain.user.repository.UserRepository;
+import com.LifeTales.util.UserUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class PointService {
     private final PointRepository pointRepository;
     private final DetailPointRepository detailPointRepository;
-
+    private final UserUtil userUtil;
     private final UserRepository userRepository;
 
     public String make_user_point_store_service(String userId){
@@ -52,13 +55,53 @@ public class PointService {
             }
         }
     }
-    public void request_detail_point_service(String userId , DetailPointDTO detailPointDTO){
+    public String request_detail_point_service(RequestDetailPointDTO data){
         /**
          * userSeq -> pointSeq find
          * point & ,
          */
+        DetailPointDTO detailPointDTO = new DetailPointDTO();
+
+        try {
+            User user = userRepository.findById(data.getUserId());
+            try {
+                Point point = pointRepository.findByUser(user);
+                detailPointDTO.setPoint(point);
+            }catch (Exception e){
+                log.info("{}",e);
+                return "cant find pointData";
+            }
+        }catch (Exception e){
+            log.info("{}",e);
+            return "cant find userData";
+        }
+
+        detailPointDTO.setDetailPoint(data.getPoint());
+        detailPointDTO.setPointLog(data.getPointLog());
+
+        if(make_detail_point_service(detailPointDTO)){
+            return "success";
+        }else{
+            return "point cant save";
+        }
     }
-    public void make_detail_point_service(DetailPointDTO detailPointDTO){
+    private boolean make_detail_point_service(DetailPointDTO detailPointDTO){
+        log.info("make_detail_point_service start");
+        try {
+            detailPointRepository.save(
+                    DetailPoint.builder()
+                            .point(detailPointDTO.getPoint())
+                            .detailPoint(detailPointDTO.getDetailPoint())
+                            .pointLog(detailPointDTO.getPointLog())
+                            .build()
+            );
+            log.info("make_detail_point_service success");
+            return true;
+        }catch (Exception e){
+            log.info("make_detail_point_service fail");
+            log.info("{}",e);
+            return false;
+        }
 
     }
 }

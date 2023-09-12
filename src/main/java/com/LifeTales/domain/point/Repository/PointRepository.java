@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface PointRepository extends JpaRepository<Point, Long> {
     boolean existsByUser(User user);
-
+    Point findByUser(User user);
 }

@@ -30,10 +30,10 @@ public class DetailPoint {
     private Long seq;
     @ManyToOne
     @JoinColumn(name = "POINT")
-    private Point pointSeq;
+    private Point point;
 
     @Column(name="DETAIL_POINT")
-    private int detailPoint;
+    private int detailPoint; //detail Point score
 
     @Column(name="POINT_LOG")
     private String pointLog;

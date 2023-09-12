@@ -6,7 +6,9 @@ import lombok.Setter;
 
 @Getter @Setter
 public class DetailPointDTO {
-    private Point pointSeq;
-    private int point;
+    private Point point;
+    private int detailPoint;
     private String pointLog;
+
+
 }
