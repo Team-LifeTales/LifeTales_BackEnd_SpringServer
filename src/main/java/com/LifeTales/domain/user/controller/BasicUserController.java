@@ -70,15 +70,8 @@ public class BasicUserController {
             ResponseEntity<String> responseEntity;
             if ("Success".equals(return_text)) {
                 log.info("UserSignUp service Success , {}", signUpData.getId());
-                String point_text = pointService.make_user_point_store_service(signUpData.getId());
-                if(point_text.equals("point store success")){
-                    responseEntity = ResponseEntity.ok("signUp Success");
-                }else{
-                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("signUp Success BUT "+point_text);
-
-                }
                 // 회원가입 성공한 경우 처리
-
+                responseEntity = ResponseEntity.ok("signUp Success");
             } else if ("DataAccessException".equals(return_text)) {
                 log.info("UserSignUp service DataAccessException , {}", signUpData.getId());
                 // 데이터베이스 예외 발생한 경우 처리
@@ -174,5 +167,15 @@ public class BasicUserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("fail");
         }
     }
+
+    public ResponseEntity basicUserBasicData(HttpServletRequest request){
+        String id = tokenUtil.findUserIdForJWT(request);
+        log.info("basicUserBasicData : id {}" ,id);
+
+
+
+
+    }
+
 
 }
