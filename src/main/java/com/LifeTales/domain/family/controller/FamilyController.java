@@ -16,7 +16,7 @@ import java.io.IOException;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/family")
-@CrossOrigin(origins = {"http://172.20.144.1:3000", "http://3.39.251.34:3000"})
+@CrossOrigin(origins = {"http://192.168.35.174:3000", "http://3.39.251.34:3000"})
 public class FamilyController {
     private final ObjectMapper objectMapper;
     private final FamilyService familyService;
