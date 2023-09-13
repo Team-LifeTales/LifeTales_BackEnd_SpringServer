@@ -1,5 +1,6 @@
 package com.LifeTales.domain.user.service;
 
+import com.LifeTales.domain.user.domain.User;
 import com.LifeTales.domain.user.repository.DAO.UserBasicDataDAO;
 import com.LifeTales.domain.user.repository.DTO.UserBasicDataDTO;
 import com.LifeTales.domain.user.repository.Mongo.UserBasicData;
@@ -77,32 +78,33 @@ public class UserMongoService {
         }
     }
 
-    public boolean createUserBasicData(UserBasicDataDTO dataDTO) {
-        log.info("uploadUserBasicData start for ID: {}", dataDTO.getId());
+    public boolean createUserBasicData(String userId) {
+        log.info("uploadUserBasicData start for ID: {}", userId);
 
         try {
-            if (userMongoRepository.existsById(dataDTO.getId())) {
-                log.info("User with ID {} already exists. Upload failed.", dataDTO.getId());
+            if (userMongoRepository.existsById(userId)) {
+                log.info("User with ID {} already exists. Upload failed.", userId);
                 return false;
             } else {
-                UserBasicData userBasicData = mapDTOToUserBasicData(dataDTO);
+                User user = userRepository.findById(userId);
+                UserBasicData userBasicData = mapDTOToUserBasicData(user);
                 userMongoRepository.save(userBasicData);
-                log.info("uploadUserBasicData success for ID: {}", dataDTO.getId());
+                log.info("uploadUserBasicData success for ID: {}", userId);
                 return true;
             }
         } catch (Exception e) {
-            log.error("Error while uploading user data for ID: {}", dataDTO.getId(), e);
+            log.error("Error while uploading user data for ID: {}",userId, e);
             return false;
         }
     }
 
-    private UserBasicData mapDTOToUserBasicData(UserBasicDataDTO dataDTO) {
+    private UserBasicData mapDTOToUserBasicData(User userData) {
         UserBasicData userBasicData = new UserBasicData();
-        userBasicData.setSeq(dataDTO.getSeq());
-        userBasicData.setId(dataDTO.getId());
-        userBasicData.setFamilySeq(dataDTO.getFamilySeq());
-        userBasicData.setProfile(dataDTO.getProfile());
-        userBasicData.setNickName(dataDTO.getNickName());
+        userBasicData.setSeq(userData.getSeq());
+        userBasicData.setId(userData.getId());
+        userBasicData.setFamilySeq(userData.getFamilySeq().getSeq());
+        userBasicData.setProfile(userData.getProfileIMG());
+        userBasicData.setNickName(userData.getNickName());
         return userBasicData;
     }
 }
