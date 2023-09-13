@@ -19,14 +19,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
     public WebSocketConfig(FindSocketService findSocketService) {
         this.findSocketService = findSocketService;
     }
+
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        /**
-         * 1. test WebSocket
-         * 2. find Family WebSocket
-         */
-        registry.addHandler(new SearchWebSocketHandler(), "/websocket-endpoint");
-
+        // WebSocket 핸들러 등록
         registry.addHandler(new FamilySearchWebSocketHandler(findSocketService), "/api/v1/users/basic/signUp/websocket-FamilySearch");
     }
 }

@@ -16,13 +16,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/users/basic")
-@CrossOrigin(origins = {"http://172.20.144.1:3000", "http://3.39.251.34:3000"})
+@CrossOrigin(origins = {"*"})
 public class BasicUserController {
     private final ObjectMapper objectMapper;
     private final UserService userService;
@@ -50,9 +51,9 @@ public class BasicUserController {
     @PostMapping("/signUp/step1")
     public ResponseEntity basicUserSignUp(@RequestBody UserSignUpDTO signUpData) {
         log.info("basicUserSignUp Start - need Data \nid : {} , PWD : {}, NickName : {} , " +
-                "Name : {} , Birthday ; {} , PhoneNumber : {} , email : {}" +
-                "",signUpData.getId(),signUpData.getPwd(),signUpData.getNickName(),signUpData.getNickName()
-        ,signUpData.getName(),signUpData.getBirthDay() , signUpData.getPhoneNumber() , signUpData.getEmail());
+                        "Name : {} , Birthday ; {} , PhoneNumber : {} , email : {}" +
+                        "",signUpData.getId(),signUpData.getPwd(),signUpData.getNickName(),signUpData.getNickName()
+                ,signUpData.getName(),signUpData.getBirthDay() , signUpData.getPhoneNumber() , signUpData.getEmail());
         log.info("UserSignUp data Check - Start");
         //Validation Start
         String returnValidText  = uservalidator.userSignUpValidate(signUpData);
