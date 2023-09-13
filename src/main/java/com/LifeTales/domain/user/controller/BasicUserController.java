@@ -9,7 +9,6 @@ import com.LifeTales.domain.user.repository.DTO.UserSignUpStep3DTO;
 import com.LifeTales.domain.user.service.MailService;
 import com.LifeTales.domain.user.service.UserService;
 import com.LifeTales.global.Validator.UserSignUpValidator;
-import com.LifeTales.global.util.UseTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,14 +16,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/users/basic")
-@CrossOrigin(origins = {"*"})
+@CrossOrigin(origins = {"http://172.20.144.1:3000", "http://3.39.251.34:3000"})
 public class BasicUserController {
     private final ObjectMapper objectMapper;
     private final UserService userService;
@@ -49,13 +47,12 @@ public class BasicUserController {
         return ResponseEntity.ok(token);
     }
 
-
     @PostMapping("/signUp/step1")
     public ResponseEntity basicUserSignUp(@RequestBody UserSignUpDTO signUpData) {
         log.info("basicUserSignUp Start - need Data \nid : {} , PWD : {}, NickName : {} , " +
-                "Name : {} , Birthday ; {} , PhoneNumber : {} , email : {}" +
-                "",signUpData.getId(),signUpData.getPwd(),signUpData.getNickName(),signUpData.getNickName()
-        ,signUpData.getName(),signUpData.getBirthDay() , signUpData.getPhoneNumber() , signUpData.getEmail());
+                        "Name : {} , Birthday ; {} , PhoneNumber : {} , email : {}" +
+                        "",signUpData.getId(),signUpData.getPwd(),signUpData.getNickName(),signUpData.getNickName()
+                ,signUpData.getName(),signUpData.getBirthDay() , signUpData.getPhoneNumber() , signUpData.getEmail());
         log.info("UserSignUp data Check - Start");
         //Validation Start
         String returnValidText  = uservalidator.userSignUpValidate(signUpData);
@@ -73,8 +70,15 @@ public class BasicUserController {
             ResponseEntity<String> responseEntity;
             if ("Success".equals(return_text)) {
                 log.info("UserSignUp service Success , {}", signUpData.getId());
+                String point_text = pointService.make_user_point_store_service(signUpData.getId());
+                if(point_text.equals("point store success")){
+                    responseEntity = ResponseEntity.ok("signUp Success");
+                }else{
+                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("signUp Success BUT "+point_text);
+
+                }
                 // 회원가입 성공한 경우 처리
-                responseEntity = ResponseEntity.ok("signUp Success");
+
             } else if ("DataAccessException".equals(return_text)) {
                 log.info("UserSignUp service DataAccessException , {}", signUpData.getId());
                 // 데이터베이스 예외 발생한 경우 처리
@@ -170,15 +174,5 @@ public class BasicUserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("fail");
         }
     }
-
-//    public ResponseEntity basicUserBasicData(HttpServletRequest request){
-//        String id = tokenUtil.findUserIdForJWT(request);
-//        log.info("basicUserBasicData : id {}" ,id);
-//
-//
-//
-//
-//    }
-
 
 }
