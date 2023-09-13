@@ -168,14 +168,14 @@ public class BasicUserController {
         }
     }
 
-    public ResponseEntity basicUserBasicData(HttpServletRequest request){
-        String id = tokenUtil.findUserIdForJWT(request);
-        log.info("basicUserBasicData : id {}" ,id);
-
-
-
-
-    }
+//    public ResponseEntity basicUserBasicData(HttpServletRequest request){
+//        String id = tokenUtil.findUserIdForJWT(request);
+//        log.info("basicUserBasicData : id {}" ,id);
+//
+//
+//
+//
+//    }
 
 
 }
