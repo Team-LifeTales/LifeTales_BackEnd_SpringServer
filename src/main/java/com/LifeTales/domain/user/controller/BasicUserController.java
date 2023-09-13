@@ -23,7 +23,7 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/users/basic")
-@CrossOrigin(origins = {"http://192.168.35.174:3000", "http://3.39.251.34:3000"})
+@CrossOrigin(origins = {"*"})
 public class BasicUserController {
     private final ObjectMapper objectMapper;
     private final UserService userService;

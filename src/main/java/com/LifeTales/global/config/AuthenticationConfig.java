@@ -38,7 +38,7 @@ public class AuthenticationConfig {
                 .cors().configurationSource(corsConfigurationSource())
                 .and()
                 .authorizeRequests()
-                .antMatchers( "/api/v1/users/basic/login" , "/api/v1/users/basic/signUp/**").permitAll()
+                .antMatchers( "/api/v1/users/basic/login" , "/api/v1/users/basic/signUp/**" , "/api/v1/family/createFamily/detail").permitAll()
                 .antMatchers(HttpMethod.POST , "/api/v1/**").authenticated()
                 .antMatchers(HttpMethod.GET, "/api/v1/**").authenticated()
                 .antMatchers(HttpMethod.PUT, "/api/v1/**").authenticated()
