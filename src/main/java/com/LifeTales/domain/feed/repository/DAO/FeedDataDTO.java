@@ -1,4 +1,4 @@
-package com.LifeTales.domain.feed.repository.DTO;
+package com.LifeTales.domain.feed.repository.DAO;
 
 import lombok.Getter;
 import lombok.Setter;

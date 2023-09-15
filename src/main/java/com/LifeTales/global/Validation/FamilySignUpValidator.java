@@ -12,10 +12,12 @@ public class FamilySignUpValidator implements com.LifeTales.global.Validator.Fam
 
         String nickName = familySignUpDTO.getNickName();
         String introduce = familySignUpDTO.getIntroduce();
+        String familyQuestion = familySignUpDTO.getFamilySignInQuestion();
+        String familyAnswer = familySignUpDTO.getFamilySignInAnswer();
 
 // Check count: 7
-        if (nickName == null) {
-            return"가족 이름은 필수입니다.";
+        if (nickName == null || familyQuestion == null || familyAnswer==null) {
+            return"가족 이름과 가족 질문, 가족 답변은 필수입니다.";
         }
 
         if (introduce.length() > 50 ) {
@@ -27,6 +29,15 @@ public class FamilySignUpValidator implements com.LifeTales.global.Validator.Fam
         if (nickName.length() < 2 || nickName.length() > 10 ) {
 
             return "NickName은 2자 이상 10자 이하이며, 특수문자는 허용되지 않습니다.{}"+nickName.length();
+        }
+
+        if (familyQuestion.length() > 50 ) {
+            return "가족 가입을 위한 질문은 50글자 이내로 작성해주세요";
+        }
+
+
+        if (familyAnswer.length() > 50 ) {
+            return "가족 가입을 위한 대답은 50글자 이내로 작성해주세요";
         }
 
         return "Success"; // 모든 조건을 통과하면 성공

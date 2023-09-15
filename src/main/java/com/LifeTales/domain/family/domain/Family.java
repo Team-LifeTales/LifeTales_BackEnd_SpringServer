@@ -51,6 +51,13 @@ public class Family {
     @Column(name = "INTRODUCE" , nullable = true , length = 100)
     private String introduce;
 
+    @Column(name = "FAMILYSIGNINQUESTION", nullable = false, length = 100)
+    private String familySignInQuestion;
+
+
+    @Column(name = "FAMILYSIGNINAnswer", nullable = false, length = 100)
+    private String familySignInAnswer;
+
     @ManyToOne
     @JoinColumn(name = "USER_SEQ")
     private User userSeq;

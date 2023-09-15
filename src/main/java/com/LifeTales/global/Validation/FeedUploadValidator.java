@@ -26,6 +26,10 @@ public class FeedUploadValidator implements com.LifeTales.global.Validator.FeedU
         if (uploadIMGs == null){
             return "사진을 선택해주세요, 선택할 사진이 없을 시 AI사진추천을 눌러주세요";
         }
+
+        if (uploadIMGs.size() < 11){
+            return "사진은 10개가 최대입니다.";
+        }
         return "Success"; // 모든 조건을 통과하면 성공
     }
 

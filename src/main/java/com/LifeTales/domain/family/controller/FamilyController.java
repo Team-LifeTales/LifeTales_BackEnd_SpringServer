@@ -3,9 +3,8 @@ package com.LifeTales.domain.family.controller;
 import com.LifeTales.common.User.FamilyNicknameChecker;
 import com.LifeTales.common.User.UserIdChecker;
 import com.LifeTales.domain.family.domain.Family;
-import com.LifeTales.domain.family.repository.DTO.FamilyDataDTO;
+import com.LifeTales.domain.family.repository.DAO.FamilyDataDAO;
 import com.LifeTales.domain.family.repository.DTO.FamilySignUpDTO;
-import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.family.service.FamilyService;
 import com.LifeTales.domain.user.domain.User;
 import com.LifeTales.domain.user.repository.UserRepository;
@@ -29,14 +28,11 @@ public class FamilyController {
     private final ObjectMapper objectMapper;
     private final FamilyService familyService;
     private final FamilySignUpValidator familyValidator;
-
-    private FamilyRepository familyRepository;
     private final UseTokenUtil tokenUtil;
     private final UserIdChecker userIdChecker;
-
     private final UserRepository userRepository;
     private final FamilyNicknameChecker familyNicknameChecker;
-    public FamilyController(ObjectMapper objectMapper, FamilyService familyService, FamilySignUpValidator familyValidator, UseTokenUtil tokenUtil, UserIdChecker userIdChecker, UserRepository userRepository, FamilyNicknameChecker familyNicknameChecker, FamilyRepository familyRepository) {
+    public FamilyController(ObjectMapper objectMapper, FamilyService familyService, FamilySignUpValidator familyValidator, UseTokenUtil tokenUtil, UserIdChecker userIdChecker, UserRepository userRepository, FamilyNicknameChecker familyNicknameChecker) {
         this.objectMapper = objectMapper;
         this.familyService = familyService;
         this.familyValidator = familyValidator;
@@ -44,18 +40,21 @@ public class FamilyController {
         this.userIdChecker = userIdChecker;
         this.userRepository = userRepository;
         this.familyNicknameChecker = familyNicknameChecker;
-        this.familyRepository = familyRepository;
     }
 
     @PostMapping("/createFamily/detail")
     public ResponseEntity FamilySignUp(@RequestParam("nickname") String nickname,
                                             @RequestParam(value = "profileIMG", required = false) MultipartFile profileIMG,
                                             @RequestParam("introduce") String introduce,
+                                            @RequestParam("familySignInQuestion") String familySignInQuestion,
+                                            @RequestParam("familySignInAnswer") String familySignInAnswer,
                                             @RequestParam("userId") String userId) throws IOException {
         log.info("basicFamilySignUp-Start >> nickName : {}" , nickname);
 
         FamilySignUpDTO signUpData = new FamilySignUpDTO();
         signUpData.setNickName(nickname);  //nickname 저장
+        signUpData.setFamilySignInQuestion(familySignInQuestion);
+        signUpData.setFamilySignInAnswer(familySignInAnswer);
 
         if (profileIMG != null){
             signUpData.setProfileIMG(profileIMG.getBytes());
@@ -131,12 +130,12 @@ public class FamilyController {
             if (user.getFamilySeq()!= null){
                 Family family = user.getFamilySeq();
                 log.info("lifeTalesFamilyDataGetTest >> id : {}" , family.getNickName());
-                FamilyDataDTO familyDataDTO = familyService.getDataForFamily(family.getNickName());
-                if(familyDataDTO == null){
+                FamilyDataDAO familyDataDAO = familyService.getDataForFamily(family.getNickName());
+                if(familyDataDAO == null){
                     log.info("null >> ");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
                 }else{
-                    String json = objectMapper.writeValueAsString(familyDataDTO);
+                    String json = objectMapper.writeValueAsString(familyDataDAO);
                     log.info(json);
                     return ResponseEntity.ok(json);
                 }

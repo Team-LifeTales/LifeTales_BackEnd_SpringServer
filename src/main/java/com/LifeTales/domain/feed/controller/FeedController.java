@@ -3,9 +3,8 @@ package com.LifeTales.domain.feed.controller;
 import com.LifeTales.common.User.FamilyNicknameChecker;
 import com.LifeTales.common.User.UserIdChecker;
 import com.LifeTales.domain.family.domain.Family;
-import com.LifeTales.domain.family.repository.FamilyRepository;
-import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
-import com.LifeTales.domain.feed.repository.DTO.FeedDetailDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDataDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDetailDTO;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.service.FeedService;
 import com.LifeTales.domain.user.domain.User;
@@ -55,7 +54,7 @@ public class FeedController {
         String id = tokenUtil.findUserIdForJWT(request);
         if(userIdChecker.doesIdExist(id)){
             User user = userRepository.findById(id);
-            if(user.getFamilySeq()!= null){
+            if(user.getFamilySeq() != null){
                 Family family = user.getFamilySeq();
                 log.info("FeedUpload-Start >> userSeq : {} familySeq : {}", user.getSeq() , family.getSeq());
                 FeedUploadDTO uploadData = new FeedUploadDTO();
@@ -157,7 +156,6 @@ public class FeedController {
                 Family family = user.getFamilySeq();
                 log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", family.getNickName());
                 Page<FeedDataDTO> feedPage = feedService.getFeedDataForFamily(family.getNickName(), pageNum, pageable);
-
                 if (feedPage == null) {
                     log.info("null >> ");
                     return null;
@@ -170,11 +168,12 @@ public class FeedController {
             }else{
                 log.info("not exists family");
             }
-
+        }else{
+            log.info("not exists user");
+            return null;
         }
+
         return null;
-
-
 
     }
     @GetMapping("/feedDetail/{seq}")

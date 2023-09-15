@@ -1,15 +1,12 @@
 package com.LifeTales.domain.family.service;
 
 import com.LifeTales.common.User.FamilyNicknameChecker;
-import com.LifeTales.common.User.UserIdChecker;
-import com.LifeTales.domain.family.repository.DTO.FamilyDataDTO;
+import com.LifeTales.domain.family.repository.DAO.FamilyDataDAO;
 import com.LifeTales.domain.family.repository.DTO.FamilySignUpDTO;
-import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.family.domain.Family;
 import com.LifeTales.domain.user.domain.User;
 import com.LifeTales.domain.user.domain.UserRole;
-import com.LifeTales.domain.user.repository.DTO.UserDataDTO;
 import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.global.s3.RequestIMGService;
 import com.amazonaws.SdkClientException;
@@ -22,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -53,26 +49,9 @@ public class FamilyService {
             log.info("family_signUp_service Start >> id {}",familySignUpdata.getIntroduce() );
             if(familySignUpdata.getProfileIMG() != null){
                 //프로파일 이미지가 있는경우
-                try{
-                    fileName = "FamilyProfile-"+familySignUpdata.getNickName();
-                    byte[] imageData = familySignUpdata.getProfileIMG();
-                    String mimeType = "image/jpeg";
-
-                    ObjectMetadata metadata = new ObjectMetadata();
-                    metadata.setContentLength(imageData.length);
-                    metadata.setContentType(mimeType);
-
-                    ByteArrayInputStream inputStream = new ByteArrayInputStream(imageData);
-
-                    amazonS3Client.putObject(bucket, fileName, inputStream, metadata);
-
-                }catch (SdkClientException e) {
-                    log.info("fail - s3 upload fail" + e);
-                    return "fail - s3 upload fail";
-
-                }
+                fileName = family_signUp_service_S3_connect(familySignUpdata);
             }else{
-                fileName = "profileImage"; // 없는 경우에는 그냥 fileName을 null이라고 해놓음 일단 -> 기본 이미지로 변경하면 될듯
+                fileName = "profileImage"; // 없는 경우에는 그냥 fileName을 profileImage라고 해놓음 일단 -> 기본 이미지로 변경하면 될듯
             }
 
             User user = userRepository.findById(familySignUpdata.getUserId());
@@ -81,10 +60,12 @@ public class FamilyService {
                     .introduce(familySignUpdata.getIntroduce())
                     .userSeq(user)
                     .build();
+            log.info("family join success in db");
             familyRepository.save(family);
             user.setFamilySeq(family);
             user.setRole(UserRole.FAMILY_LEADER);
             entityManager.merge(user);
+            log.info("user database update");
             return "Success";
         } catch (DataAccessException ex) {
             // 데이터베이스 예외 처리
@@ -98,10 +79,12 @@ public class FamilyService {
             // 다른 처리 로직 추가
 
             return "RuntimeException";
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
-    public FamilyDataDTO getDataForFamily(String nickname) throws IOException {
+    public FamilyDataDAO getDataForFamily(String nickname) throws IOException {
         /**
          * to do list
          * 아이디체크 (존재여부)
@@ -114,39 +97,62 @@ public class FamilyService {
         log.info("getDataForFamily checkNickname result >> {}" , nickNameCheck);
         if(nickNameCheck){
             log.info("getDataForFamily checkNickName Success >> {}" , nickname);
-            FamilyDataDTO familyDataDTO = new FamilyDataDTO();
+            FamilyDataDAO familyDataDAO = new FamilyDataDAO();
             Family familyData = familyRepository.findByNickName(nickname);
             //데이터 셋업
-            familyDataDTO.setUserId(familyData.getUserSeq().getId());
-            familyDataDTO.setIntroduce(familyData.getIntroduce());
-            familyDataDTO.setNickName(familyData.getNickName());
+            familyDataDAO.setUserId(familyData.getUserSeq().getId());
+            familyDataDAO.setIntroduce(familyData.getIntroduce());
+            familyDataDAO.setNickName(familyData.getNickName());
             //s3에 요청하기 전 확인하기
             if(familyData.getProfileIMG() != null){
                 log.info("getDataForUser S3 connect Start");
                 String objectKey = "FamilyProfile-"+nickname;
                 try {
                     InputStream profileIMG = imgService.getImageInputStream(objectKey);
-                    familyDataDTO.setProfileIMG(profileIMG);
+                    familyDataDAO.setProfileIMG(profileIMG);
 
                 }catch (SdkClientException e){
                     //aws sdk Error
-                    log.error("getDataForUser : " + e);
+                    log.error("getDataForFamily : " + e);
                     return null;
                 }catch (Exception e){
-                    log.error("getDataForUser : " + e);
+                    log.error("getDataForFamily : " + e);
                     return null;
                 }
 
             }
-            return familyDataDTO;
+            return familyDataDAO;
 
 
 
         }else{
-
+            log.error("getDataForFamily :  not exists Family Data" );
         }
 
         return null;
     }
 
+
+    public String family_signUp_service_S3_connect(FamilySignUpDTO familySignUpdata) throws IOException{
+        try{
+            String fileName = "FamilyProfile-"+familySignUpdata.getNickName();
+            byte[] imageData = familySignUpdata.getProfileIMG();
+            String mimeType = "image/jpeg";
+
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(imageData.length);
+            metadata.setContentType(mimeType);
+
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(imageData);
+
+            amazonS3Client.putObject(bucket, fileName, inputStream, metadata);
+
+            return fileName;
+        }catch (SdkClientException e) {
+            log.info("fail - s3 upload fail" + e);
+            return "fail - s3 upload fail";
+
+        }
+
+    }
 }
