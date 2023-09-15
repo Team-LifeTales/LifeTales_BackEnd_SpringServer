@@ -24,6 +24,7 @@ import java.io.IOException;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/like")
+@CrossOrigin(origins = {"http://192.168.35.121:3000", "http://3.39.251.34:3000"})
 public class LikeController {
     private final ObjectMapper objectMapper;
 

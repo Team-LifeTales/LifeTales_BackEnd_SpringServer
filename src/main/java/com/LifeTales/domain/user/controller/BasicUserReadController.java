@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/users/basic/data")
-@CrossOrigin(origins = {"http://192.168.35.174:3000", "http://3.39.251.34:3000"})
+@CrossOrigin(origins = {"http://192.168.35.121:3000", "http://3.39.251.34:3000"})
 public class BasicUserReadController {
     private final UserMongoService userMongoService;
 

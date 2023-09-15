@@ -30,6 +30,12 @@ public class AuthenticationConfig {
     private final UserRepository userRepository;
     @Value("${jwt.Life-tales-secretKey}")
     private String secretKey;
+
+    @Value("cors.front-ip")
+    private String front_ip;
+    @Value("cors.developer-ip")
+    private String developer_ip;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws  Exception{
         return httpSecurity
@@ -53,7 +59,7 @@ public class AuthenticationConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://192.168.35.174:3000", "http://3.39.251.34:3000"));
+        configuration.setAllowedOrigins(Arrays.asList(front_ip, developer_ip));
         configuration.setAllowedMethods(Arrays.asList("*")); // 혹은 필요한 HTTP 메소드만 선택적으로 지정
         configuration.setAllowedHeaders(Arrays.asList("*")); // 혹은 필요한 헤더만 선택적으로 지정
         configuration.setAllowCredentials(true);
