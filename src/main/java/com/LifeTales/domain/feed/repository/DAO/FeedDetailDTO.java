@@ -1,4 +1,4 @@
-package com.LifeTales.domain.feed.repository.DTO;
+package com.LifeTales.domain.feed.repository.DAO;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +16,5 @@ public class FeedDetailDTO {
     private List<InputStream> feedIMGs;
     private String content;
     private LocalDateTime isCreated;
-    private List<FeedCommentDTO> feedComments;
 
 }

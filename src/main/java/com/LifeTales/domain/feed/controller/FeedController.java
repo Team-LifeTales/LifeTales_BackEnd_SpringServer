@@ -1,11 +1,16 @@
 package com.LifeTales.domain.feed.controller;
 
-import com.LifeTales.common.User.FeedChecker;
-import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
-import com.LifeTales.domain.feed.repository.DTO.FeedDetailDTO;
+import com.LifeTales.common.User.FamilyNicknameChecker;
+import com.LifeTales.common.User.UserIdChecker;
+import com.LifeTales.domain.family.domain.Family;
+import com.LifeTales.domain.feed.repository.DAO.FeedDataDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDetailDTO;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.service.FeedService;
+import com.LifeTales.domain.user.domain.User;
+import com.LifeTales.domain.user.repository.UserRepository;
 import com.LifeTales.global.Validator.FeedUploadValidator;
+import com.LifeTales.global.util.UseTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -15,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,132 +34,146 @@ public class FeedController {
     private final FeedService feedService;
     private final FeedUploadValidator feedUploadValidator;
 
-    private final FeedChecker feedChecker;
-    public FeedController(ObjectMapper objectMapper, FeedService feedService, FeedUploadValidator feedUploadValidator, FeedChecker feedChecker) {
+    private final UserRepository userRepository;
+    private final UserIdChecker userIdChecker;
+    private final UseTokenUtil tokenUtil;
+    public FeedController(ObjectMapper objectMapper, FeedService feedService, FeedUploadValidator feedUploadValidator, UserRepository userRepository, UserIdChecker userIdChecker, UseTokenUtil tokenUtil) {
         this.objectMapper = objectMapper;
         this.feedService = feedService;
         this.feedUploadValidator = feedUploadValidator;
-        this.feedChecker = feedChecker;
+        this.userRepository = userRepository;
+        this.userIdChecker = userIdChecker;
+        this.tokenUtil = tokenUtil;
     }
 
     @PostMapping("/upload/detail/")
-    public ResponseEntity FeedUpload( @RequestParam("userSeq") Long userSeq,
-                                           @RequestParam("familySeq") Long familySeq,
+    public ResponseEntity FeedUpload(HttpServletRequest request ,
                                            @RequestParam(value = "uploadIMG", required = false) List<MultipartFile> uploadIMGs,
                                            @RequestParam("content") String content) throws IOException {
 
-        log.info("FeedUpload-Start >> userSeq : {} familySeq : {}", userSeq , familySeq);
+        String id = tokenUtil.findUserIdForJWT(request);
+        if(userIdChecker.doesIdExist(id)){
+            User user = userRepository.findById(id);
+            if(user.getFamilySeq() != null){
+                Family family = user.getFamilySeq();
+                log.info("FeedUpload-Start >> userSeq : {} familySeq : {}", user.getSeq() , family.getSeq());
+                FeedUploadDTO uploadData = new FeedUploadDTO();
+                uploadData.setUserSeq(user.getSeq());
+                uploadData.setFamilySeq(family.getSeq());
+                uploadData.setContent(content);
+                if (uploadIMGs != null && !uploadIMGs.isEmpty()) { //uploadImage가 있을 경우
+                    List<byte[]> imageBytesList = new ArrayList<>();
 
-        FeedUploadDTO uploadData = new FeedUploadDTO();
-        uploadData.setUserSeq(userSeq);
-        uploadData.setFamilySeq(familySeq);
-        uploadData.setContent(content);
+                    for (MultipartFile uploadIMG : uploadIMGs) {
+                        try {
+                            byte[] imageBytes = uploadIMG.getBytes();
+                            imageBytesList.add(imageBytes);
+                            log.info("FeedUploadImageCheck - True");
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                            // 처리 중 오류가 발생할 경우 예외 처리
+                        }
+                    }
 
-        if (uploadIMGs != null && !uploadIMGs.isEmpty()) { //uploadImage가 있을 경우
-            List<byte[]> imageBytesList = new ArrayList<>();
-
-            for (MultipartFile uploadIMG : uploadIMGs) {
-                try {
-                    byte[] imageBytes = uploadIMG.getBytes();
-                    imageBytesList.add(imageBytes);
-                    log.info("FeedUploadImageCheck - True");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    // 처리 중 오류가 발생할 경우 예외 처리
-                }
-            }
-
-            uploadData.setUploadImages(imageBytesList);
-        } else {
-            uploadData.setUploadImages(null);
-            log.info("FeedUploadImageCheck - False");
-        }
-
-
-        log.info("FeedUpload data Check - Stat");
-        //Validation Start
-        String returnValidText = feedUploadValidator.feedUploadValidate(uploadData);
-        //Validation End
-        log.info("FeedUpload data Check - End");
-        ResponseEntity<String> responseEntity;
-        if ("Success".equals(returnValidText)) {
-            boolean userIdCheck = feedChecker.doesUserSeqExist(userSeq);
-            boolean familyIdCheck = feedChecker.doesFamilySeqExist(familySeq);
-            if (userIdCheck && familyIdCheck){
-                String return_text = feedService.Feed_upload_service(uploadData);
-                if ("Success".equals(return_text)) {
-                    log.info("FamilySignUp service Success , {}", uploadData.getUserSeq());
-                    // 회원가입 성공한 경우 처리
-                    responseEntity = ResponseEntity.ok("upload Success");
-                } else if ("DataAccessException".equals(return_text)) {
-                    log.info("FeedUpload service DataAccessException , {}", uploadData.getUserSeq());
-                    // 데이터베이스 예외 발생한 경우 처리
-                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("DataAccessException");
-                } else if ("RuntimeException".equals(return_text)) {
-                    log.info("FeedUpload service RuntimeException , {}", uploadData.getUserSeq());
-                    // 런타임 예외 발생한 경우 처리
-                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("RuntimeException");
+                    uploadData.setUploadImages(imageBytesList);
                 } else {
-                    log.info("FeedUpload service don't Know Error , Please contact about Developer, {}", uploadData.getUserSeq());
-                    // 기타 예외나 다른 경우 처리
-                    responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("don't Know Error");
+                    uploadData.setUploadImages(null);
+                    log.info("FeedUploadImageCheck - False");
                 }
-                return  responseEntity;
-            } else {
-                if (!userIdCheck){
-                    log.info("유저가 존재하지 않습니다");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("유저가 존재하지 않습니다");
+                log.info("FeedUpload data Check - Stat");
+                //Validation Start
+                String returnValidText = feedUploadValidator.feedUploadValidate(uploadData);
+                //Validation End
+                log.info("FeedUpload data Check - End");
+                ResponseEntity<String> responseEntity;
+                if ("Success".equals(returnValidText)) {
+                    String return_text = feedService.Feed_upload_service(uploadData);
+                    if ("Success".equals(return_text)) {
+                        log.info("FamilySignUp service Success , {}", uploadData.getUserSeq());
+                        // 회원가입 성공한 경우 처리
+                        responseEntity = ResponseEntity.ok("upload Success");
+                    } else if ("DataAccessException".equals(return_text)) {
+                        log.info("FeedUpload service DataAccessException , {}", uploadData.getUserSeq());
+                        // 데이터베이스 예외 발생한 경우 처리
+                        responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("DataAccessException");
+                    } else if ("RuntimeException".equals(return_text)) {
+                        log.info("FeedUpload service RuntimeException , {}", uploadData.getUserSeq());
+                        // 런타임 예외 발생한 경우 처리
+                        responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("RuntimeException");
+                    } else {
+                        log.info("FeedUpload service don't Know Error , Please contact about Developer, {}", uploadData.getUserSeq());
+                        // 기타 예외나 다른 경우 처리
+                        responseEntity = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("don't Know Error");
+                    }
+                    return  responseEntity;
                 }else{
-                    log.info("가족이 존재하지 않습니다");
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("가족이 존재하지 않습니다");
+                    log.info("FeedUpload validation failed: {}", returnValidText);
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(returnValidText);
                 }
 
+            }else{
+                log.info("존재하지 않는 Family입니다");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("가족이 존재하지 않습니다");
             }
-
-
         }else{
-            log.info("FeedUpload validation failed: {}", returnValidText);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(returnValidText);
+            log.info("존재하지 않는 User입니다");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("유저가 존재하지 않습니다");
         }
 
     }
 
-    @GetMapping("/feedDataUser/{id}")
-    public ResponseEntity GetFeedDataForUser(@PathVariable(required = true) String id,
+    @GetMapping("/feedDataUser/")
+    public ResponseEntity GetFeedDataForUser(HttpServletRequest request,
                                                           @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
                                                           Pageable pageable) throws IOException {
-        log.info("lifeTalesFeedDataForUserGetTest >> id : {}", id);
-        Page<FeedDataDTO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
-        if (feedDataDTO == null) {
-            log.info("null >> ");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
-        } else {
-            String json = objectMapper.writeValueAsString(feedDataDTO);
-            log.info(json);
-            log.info("sucess");
-            return ResponseEntity.ok(json);
+        String id = tokenUtil.findUserIdForJWT(request);
+        if(userIdChecker.doesIdExist(id)){
+            log.info("lifeTalesFeedDataForUserGetTest >> id : {}", id);
+            Page<FeedDataDTO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
+            if (feedDataDTO == null) {
+                log.info("null >> ");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+            } else {
+                String json = objectMapper.writeValueAsString(feedDataDTO);
+                log.info(json);
+                log.info("sucess");
+                return ResponseEntity.ok(json);
+            }
         }
+        return null;
     }
 
-    @GetMapping("/feedDataFamily/{nickname}")
+    @GetMapping("/feedDataFamily/")
     public ResponseEntity<Page<FeedDataDTO>> getFeedDataForFamily(
-            @PathVariable(required = true) String nickname,
+            HttpServletRequest request,
             @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
             Pageable pageable
     ) throws IOException {
-        log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", nickname);
-        Page<FeedDataDTO> feedPage = feedService.getFeedDataForFamily(nickname, pageNum, pageable);
-
-        if (feedPage == null) {
-            log.info("null >> ");
+        String id = tokenUtil.findUserIdForJWT(request);
+        if(userIdChecker.doesIdExist(id)){
+            User user = userRepository.findById(id);
+            if(user.getFamilySeq()!=null){
+                Family family = user.getFamilySeq();
+                log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", family.getNickName());
+                Page<FeedDataDTO> feedPage = feedService.getFeedDataForFamily(family.getNickName(), pageNum, pageable);
+                if (feedPage == null) {
+                    log.info("null >> ");
+                    return null;
+                } else {
+                    String json = objectMapper.writeValueAsString(feedPage);
+                    log.info(json);
+                    log.info("sucess");
+                    return ResponseEntity.ok(feedPage);
+                }
+            }else{
+                log.info("not exists family");
+            }
+        }else{
+            log.info("not exists user");
             return null;
-        } else {
-            String json = objectMapper.writeValueAsString(feedPage);
-            log.info(json);
-            log.info("sucess");
-            return ResponseEntity.ok(feedPage);
         }
 
+        return null;
 
     }
     @GetMapping("/feedDetail/{seq}")

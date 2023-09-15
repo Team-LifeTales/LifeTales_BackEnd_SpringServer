@@ -2,17 +2,13 @@ package com.LifeTales.domain.feed.service;
 
 
 import com.LifeTales.common.User.FamilyNicknameChecker;
-import com.LifeTales.common.User.FeedChecker;
 import com.LifeTales.common.User.UserIdChecker;
-import com.LifeTales.domain.comment.domain.Comment;
-import com.LifeTales.domain.comment.domain.CommentRole;
-import com.LifeTales.domain.comment.repository.DTO.SlaveCommentReadDTO;
 import com.LifeTales.domain.family.domain.Family;
 import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.feed.domain.Feed;
 import com.LifeTales.domain.feed.domain.FeedImageList;
-import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
-import com.LifeTales.domain.feed.repository.DTO.FeedDetailDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDataDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDetailDTO;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.repository.FeedImageListRepository;
 import com.LifeTales.domain.feed.repository.FeedRepository;
@@ -41,12 +37,8 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Random;
-import java.util.random.*;
 import java.io.ByteArrayInputStream;
-
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -65,7 +57,6 @@ public class FeedService {
     private String bucket;
     private final FamilyNicknameChecker familySeqChecker;
     private final UserIdChecker userIdChecker;
-    private final FeedChecker feedSeqChecker;
     private final RequestIMGService imgService;
 
     @PersistenceContext
@@ -81,6 +72,7 @@ public class FeedService {
                     .content(uploadData.getContent())
                     .build();
 
+            log.info("Feed_Create_in_db >> id {}",uploadData.getContent() );
             String fileName = "";
             Feed savedFeed = feedRepository.save(newFeed);
             Long savedFeedId = savedFeed.getSeq(); //저장한 feed의 키 값을 기록
@@ -146,7 +138,7 @@ public class FeedService {
          * */
 
         log.info("getFeedDataForFamily Start >> {}",nickname);
-        boolean nickNameCheck = feedSeqChecker.doesFamilyNicknameExist(nickname); // family 존재하는지 확인
+        boolean nickNameCheck = familyRepository.existsByNickName(nickname);
         log.info("getFeedDataForFamily checkId result >> {}" , nickNameCheck);
         if(nickNameCheck){
             log.info("getFeedDataForFamily checkId Success >> {}" , nickname);
@@ -158,37 +150,10 @@ public class FeedService {
 
             Family family = familyRepository.findByNickName(nickname);
             Page<Feed> feedPage = feedRepository.findByFamilySeqAndIsDELETED(family, false , pageable );
-            Page<FeedDataDTO> returnPage = feedPage.map(feedData -> {
-                boolean idCheck = userRepository.existsById(feedData.getUserSeq().getSeq());
-                if (idCheck){
-                    FeedDataDTO feedDataDTO = new FeedDataDTO();
-                    feedDataDTO.setUserSeq(feedData.getUserSeq().getSeq());
-                    feedDataDTO.setFeedSeq(feedData.getSeq());
-                    feedDataDTO.setFeedIMG(null);
-                    FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
-                    String firstFeedImageURL = feedImage.getFeedImageURL();
-                    if(firstFeedImageURL != null){
-                        log.info("getFeedDataForFamily S3 connect Start");
-                        String objectKey = firstFeedImageURL;
-                        try {
-                            InputStream feedIMG = imgService.getImageInputStream(objectKey);
-                            feedDataDTO.setFeedIMG(feedIMG); //이미지까지 입력했을 시에 DTO리스트에 추가
-
-                        }catch (SdkClientException e){
-                            //aws sdk Error
-                            log.error("getFeedDataForFamily : " + e);
-                            return null;
-                        }catch (Exception e){
-                            log.error("getFeedDataForFamily : " + e);
-                            return null;
-                        }
-                    }
-                    return feedDataDTO;
-                }
-                else{
-                    return null;
-                }
-            });
+            Page<FeedDataDTO> returnPage = getPageFeedData(feedPage);
+            if (returnPage == null){
+                return null;
+            }
             return returnPage;
 
         }else{
@@ -209,7 +174,7 @@ public class FeedService {
          * */
 
         log.info("getFeedDataForUser Start >> {}",id);
-        boolean idCheck = feedSeqChecker.doesUserIdExist(id); // user 존재하는지 확인
+        boolean idCheck = userIdChecker.doesIdExist(id); // user 존재하는지 확인
         log.info("getFeedDataForUser checkId result >> {}" , idCheck);
         if(idCheck){
             log.info("getFeedDataForUser checkId Success >> {}" , id);
@@ -220,35 +185,12 @@ public class FeedService {
 
 
             User user = userRepository.findById(id);
-            List<Feed> feedDatas = feedRepository.findByUserSeq(user); //familySeq로 해당하는 feed 전부 찾아서 리스트로 가져옴
-            //데이터 셋업
             //List<FeedDataDTO> feedDataDTOList = new ArrayList<>(); // feed에 대한 정보들도 리스트로 만듬, 들어가는 정보 (메인사진, userSeq, familySeq, )
             Page<Feed> feedPage = feedRepository.findByUserSeqAndIsDELETED(user, false , pageable );
-            Page<FeedDataDTO> returnPage = feedPage.map(feedData -> {
-                FeedDataDTO feedDataDTO = new FeedDataDTO();
-                feedDataDTO.setUserSeq(feedData.getUserSeq().getSeq());
-                feedDataDTO.setFeedSeq(feedData.getSeq());
-                feedDataDTO.setFeedIMG(null);
-                FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
-                String firstFeedImageURL = feedImage.getFeedImageURL();
-                if(firstFeedImageURL != null){
-                    log.info("getFeedDataForUser S3 connect Start");
-                    String objectKey = firstFeedImageURL;
-                    try {
-                        InputStream feedIMG = imgService.getImageInputStream(objectKey);
-                        feedDataDTO.setFeedIMG(feedIMG); //이미지까지 입력했을 시에 DTO리스트에 추가
-
-                    }catch (SdkClientException e){
-                        //aws sdk Error
-                        log.error("getFeedDataForUser : " + e);
-                        return null;
-                    }catch (Exception e){
-                        log.error("getFeedDataForUser : " + e);
-                        return null;
-                    }
-                }
-                return feedDataDTO;
-            });
+            Page<FeedDataDTO> returnPage = getPageFeedData(feedPage);
+            if (returnPage == null){
+                return null;
+            }
             return returnPage;
 
         }else{
@@ -267,7 +209,7 @@ public class FeedService {
          * */
 
         log.info("getFeedDeatil Start >> {}",feedSeq);
-        boolean feedSeqCheck = feedSeqChecker.doesSeqExist(feedSeq);
+        boolean feedSeqCheck = feedRepository.existsBySeq(feedSeq);
         log.info("getFeedDetail checkSeq result >> {}" , feedSeqCheck);
         if(feedSeqCheck){
             log.info("getFeedDetail checkSeq Success >> {}" , feedSeqCheck);
@@ -321,4 +263,40 @@ public class FeedService {
         return null;
     }
 
+    public Page<FeedDataDTO> getPageFeedData(Page<Feed> feedPage)throws  IOException{
+        Page<FeedDataDTO> returnPage = feedPage.map(feedData -> {
+            boolean idCheck = userRepository.existsById(feedData.getUserSeq().getSeq());
+            if (idCheck){
+                FeedDataDTO feedDataDTO = new FeedDataDTO();
+                feedDataDTO.setUserSeq(feedData.getUserSeq().getSeq());
+                feedDataDTO.setFeedSeq(feedData.getSeq());
+                feedDataDTO.setFeedIMG(null);
+                FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
+                String firstFeedImageURL = feedImage.getFeedImageURL();
+                if(firstFeedImageURL != null){
+                    log.info("getFeedDataForFamily S3 connect Start");
+                    String objectKey = firstFeedImageURL;
+                    try {
+                        InputStream feedIMG = imgService.getImageInputStream(objectKey);
+                        feedDataDTO.setFeedIMG(feedIMG); //이미지까지 입력했을 시에 DTO리스트에 추가
+
+                    }catch (SdkClientException e){
+                        //aws sdk Error
+                        log.error("getFeedDataForFamily : " + e);
+                        return null;
+                    }catch (Exception e){
+                        log.error("getFeedDataForFamily : " + e);
+                        return null;
+                    }
+                }
+                return feedDataDTO;
+            }
+            else{
+                return null;
+            }
+        });
+        return returnPage;
+
+
+    }
 }

@@ -2,8 +2,8 @@ package com.LifeTales.domain.family.repository;
 
 import com.LifeTales.domain.family.domain.Family;
 
-import com.LifeTales.domain.family.repository.DTO.FamilyDataDTO;
 import com.LifeTales.domain.family.repository.DTO.FamilySearchDTO;
+import com.LifeTales.domain.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,6 +20,8 @@ public interface FamilyRepository extends JpaRepository<Family, Long> {
     Family findBySeq(Long familySeq);
 
     Family findByNickName(String nickName);
+
+    Family findByUserSeq(User user);
     List<Family> findByNickNameContaining(String nickName);
 
 }

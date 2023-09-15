@@ -1,10 +1,9 @@
 package com.LifeTales.domain.test.controller;
 
-import com.LifeTales.domain.comment.repository.DTO.MasterCommentReadDTO;
-import com.LifeTales.domain.family.repository.DTO.FamilyDataDTO;
+import com.LifeTales.domain.family.repository.DAO.FamilyDataDAO;
 import com.LifeTales.domain.family.service.FamilyService;
-import com.LifeTales.domain.feed.repository.DTO.FeedDataDTO;
-import com.LifeTales.domain.feed.repository.DTO.FeedDetailDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDataDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDetailDTO;
 import com.LifeTales.domain.feed.service.FeedService;
 import com.LifeTales.domain.test.domain.Test;
 import com.LifeTales.domain.test.repository.dto.TestDTO;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.List;
 
 @Slf4j
 @Controller
@@ -97,7 +95,7 @@ public class LifeTalesTestController {
     @GetMapping("/test/familyData/{nickname}")
     public ResponseEntity lifeTalesFamilyDataGetTest(@PathVariable String nickname) throws IOException {
         log.info("lifeTalesFamilyDataGetTest >> id : {}" , nickname);
-        FamilyDataDTO familyDataDTO = familyService.getDataForFamily(nickname);
+        FamilyDataDAO familyDataDTO = familyService.getDataForFamily(nickname);
         if(familyDataDTO == null){
             log.info("null >> ");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");

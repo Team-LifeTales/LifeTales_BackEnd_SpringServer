@@ -12,6 +12,8 @@ public class FamilySignUpDTO {
     private String nickName;
     private String introduce;
     private byte [] profileIMG;
-    private Long userSeq;
+    private String userId;
+    private String familySignInQuestion;
+    private String familySignInAnswer;
 
 }
