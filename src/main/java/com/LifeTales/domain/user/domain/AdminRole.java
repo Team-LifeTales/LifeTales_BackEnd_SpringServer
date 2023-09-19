@@ -2,7 +2,7 @@ package com.LifeTales.domain.user.domain;
 
 public enum AdminRole {
 
-    Developer("developer"),
+    DEVELOPER("developer"),
     CommunicationTeam("communicationTeam");
 
     private final String roleName;

@@ -6,23 +6,47 @@
 </head>
 <body>
 <h1>회원 가입</h1>
-<form th:action="@{/register}" method="post">
+<form th:action="@{/api/v1/users/admin/register}" method="post">
   <label for="id">ID:</label>
   <input type="text" id="id" name="id" required><br>
 
   <label for="email">Email:</label>
   <input type="email" id="email" name="email" required><br>
 
-  <label for="password">Password:</label>
-  <input type="password" id="password" name="password" required><br>
+  <label for="pwd">Password:</label>
+  <input type="password" id="pwd" name="pwd" required><br>
 
   <label for="role">Role:</label>
   <select id="role" name="role" required>
-    <option value="ROLE_USER">User</option>
-    <option value="ROLE_ADMIN">Admin</option>
+    <option value="DEVELOPER">DEVELOPER</option>
+    <option value="COMMUNICATION_TEAM">COMMUNICATION_TEAM</option>
   </select><br>
 
   <input type="submit" value="가입">
 </form>
+
+<script>
+  // 폼 제출 후 서버 응답 처리
+  document.querySelector('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    fetch(this.action, {
+      method: 'POST',
+      body: new FormData(this),
+    })
+            .then(function (response) {
+              if (response.status === 200) {
+                // 가입 성공 시 로그인 페이지로 리디렉션
+                window.location.href = '/login';
+              } else {
+                return response.text(); // 다른 응답 코드의 내용을 반환
+              }
+            })
+            .then(function (message) {
+              // 프론트엔드에 응답 내용 표시
+              alert(message); // 또는 다른 방법으로 표시
+            });
+  });
+</script>
+
 </body>
 </html>
