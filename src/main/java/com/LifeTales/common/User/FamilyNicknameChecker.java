@@ -14,8 +14,8 @@ public class FamilyNicknameChecker {
         this.userRepository = userRepository;
     }
 
-    public boolean doesNickNameExist(String nickname) {
-        return familyRepository.existsByNickName(nickname);
+    public boolean doesNicknameExist(String nickname) {
+        return familyRepository.existsByNickname(nickname);
     }
 
     public boolean doesSeqExist(Long seq) {

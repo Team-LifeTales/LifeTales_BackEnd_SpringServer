@@ -7,10 +7,10 @@ import java.io.InputStream;
 
 @Getter
 @Setter
-public class FeedDataDTO {
+public class FeedDataDAO {
 
     private Long feedSeq;
     private Long userSeq;
-    private InputStream feedIMG;
+    private String feedIMG;
 
 }

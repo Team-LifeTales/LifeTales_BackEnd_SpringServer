@@ -9,11 +9,11 @@ import java.util.List;
 
 @Getter
 @Setter
-public class FeedDetailDTO {
+public class FeedDetailDAO {
 
     private Long feedSeq;
     private Long userSeq;
-    private List<InputStream> feedIMGs;
+    private List<String> feedIMGs;
     private String content;
     private LocalDateTime isCreated;
 

@@ -2,8 +2,8 @@ package com.LifeTales.domain.test.controller;
 
 import com.LifeTales.domain.family.repository.DAO.FamilyDataDAO;
 import com.LifeTales.domain.family.service.FamilyService;
-import com.LifeTales.domain.feed.repository.DAO.FeedDataDTO;
-import com.LifeTales.domain.feed.repository.DAO.FeedDetailDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDataDAO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDetailDAO;
 import com.LifeTales.domain.feed.service.FeedService;
 import com.LifeTales.domain.test.domain.Test;
 import com.LifeTales.domain.test.repository.dto.TestDTO;
@@ -109,13 +109,13 @@ public class LifeTalesTestController {
 
     @ResponseBody
     @GetMapping("/test/feedDataFamily/{nickname}")
-    public ResponseEntity<Page<FeedDataDTO>> getFeedDataForFamily(
+    public ResponseEntity<Page<FeedDataDAO>> getFeedDataForFamily(
             @PathVariable(required = true) String nickname,
             @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
             Pageable pageable
     ) throws IOException {
         log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", nickname);
-        Page<FeedDataDTO> feedPage = feedService.getFeedDataForFamily(nickname, pageNum, pageable);
+        Page<FeedDataDAO> feedPage = feedService.getFeedDataForFamily(nickname, pageNum, pageable);
 
         if (feedPage == null) {
             log.info("null >> ");
@@ -136,7 +136,7 @@ public class LifeTalesTestController {
                                                           @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
                                                           Pageable pageable) throws IOException {
         log.info("lifeTalesFeedDataForUserGetTest >> id : {}", id);
-        Page<FeedDataDTO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
+        Page<FeedDataDAO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
         if (feedDataDTO == null) {
             log.info("null >> ");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
@@ -151,7 +151,7 @@ public class LifeTalesTestController {
     @GetMapping("/test/feedDetail/{seq}")
     public ResponseEntity lifeTalesFeedDataDetailGet(@PathVariable Long seq) throws IOException {
         log.info("lifeTalesFeedDataDetailGet>> seq : {}", seq);
-        FeedDetailDTO feedDetailDTO = feedService.getFeedDetail(seq);
+        FeedDetailDAO feedDetailDTO = feedService.getFeedDetail(seq);
         if (feedDetailDTO == null) {
             log.info("null >> ");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");

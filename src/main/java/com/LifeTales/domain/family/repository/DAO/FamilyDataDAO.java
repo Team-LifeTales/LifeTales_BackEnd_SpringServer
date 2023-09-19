@@ -8,8 +8,9 @@ import java.io.InputStream;
 @Getter @Setter
 public class FamilyDataDAO {
 
-    private String nickName;
+    private String nickname;
     private String introduce;
-    private InputStream profileIMG;
+    private String profileIMGURL;
     private String userId;
+
 }

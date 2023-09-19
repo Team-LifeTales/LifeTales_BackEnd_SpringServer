@@ -25,14 +25,14 @@ public class FindSocketService {
         List<Family> result;
 
         //result = familyRepository.findFamilyByNickNameContaining(msg);
-        result = familyRepository.findByNickNameContaining(msg);
+        result = familyRepository.findByNicknameContaining(msg);
 
         List<FamilySearchDTO> familySearchDTOList = new ArrayList<>();
 
         //List<String> nickNames = new ArrayList<>();
 
         for (Family family : result) {
-            FamilySearchDTO dto = new FamilySearchDTO(family.getSeq(), family.getNickName());
+            FamilySearchDTO dto = new FamilySearchDTO(family.getSeq(), family.getNickname());
             familySearchDTOList.add(dto);
         }
 

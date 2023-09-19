@@ -10,4 +10,6 @@ public class UserSignUpStep3DTO {
     private String id;
     private String userRole;
     private Long familySeq;
+    private String questionForSignIn;
+    private String answerForSignIn;
 }
