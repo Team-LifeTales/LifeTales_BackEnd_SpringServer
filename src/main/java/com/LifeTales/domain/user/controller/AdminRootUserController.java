@@ -18,5 +18,16 @@ public class AdminRootUserController {
         // 회원 가입 폼 페이지로 이동
         return "registerAdmin";
     }
+    @GetMapping("/login")
+    public String showLoginForm(Model model) {
+        // 로그인 폼 포에지 이동
+        return "loginAdmin";
+    }
+
+    @GetMapping("/main")
+    public String showMainForm(Model model) {
+        // 로그인 폼 포에지 이동
+        return "mainAdmin";
+    }
 }
 

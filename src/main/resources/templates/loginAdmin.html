@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login</title>
+</head>
+<body>
+<h1>Admin Login</h1>
+
+<form th:action="@{/api/v1/users/admin/login}" method="post">
+    <label for="id">ID:</label>
+    <input type="text" id="id" name="id" required><br>
+
+    <label for="pwd">Password:</label>
+    <input type="password" id="pwd" name="pwd" required><br>
+
+    <input type="submit" value="로그인">
+</form>
+
+<script>
+    // 폼 제출 후 서버 응답 처리
+    document.querySelector('form').addEventListener('submit', function (e) {
+        e.preventDefault();
+        fetch(this.action, {
+            method: 'POST',
+            body: new FormData(this),
+        })
+            .then(function (response) {
+                if (response.status === 200) {
+                    // 가입 성공 시 로그인 페이지로 리디렉션
+                    window.location.href = '/main';
+                } else {
+                    return response.text(); // 다른 응답 코드의 내용을 반환
+                }
+            })
+            .then(function (message) {
+                // 프론트엔드에 응답 내용 표시
+                alert(message);
+            });
+    });
+</script>
+</body>
+</html>

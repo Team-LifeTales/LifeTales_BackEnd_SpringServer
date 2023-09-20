@@ -1,6 +1,7 @@
 package com.LifeTales.domain.user.controller;
 
-import com.LifeTales.domain.user.repository.DTO.UserAdminSignInDTO;
+import com.LifeTales.domain.user.repository.DTO.admin.UserAdminLoginDTO;
+import com.LifeTales.domain.user.repository.DTO.admin.UserAdminSignInDTO;
 import com.LifeTales.domain.user.service.AdminService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -33,6 +34,24 @@ public class AdminUserController {
         if(adminService.admin_register_service(userAdminSignInDTO)){
             // 가입 성공 시 200 OK 응답 반환
             return ResponseEntity.ok("Success");
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("fail : server Error - please contact - developer");
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<String> loginAdmin(UserAdminLoginDTO adminLoginDTO) {
+        if(adminLoginDTO.nullCheck()){
+            log.info("loginAdmin fail : null");
+            return ResponseEntity.badRequest().body("fail : empty-data");
+        }
+        if(adminLoginDTO.isValied()){
+            log.info("loginAdmin fail : vail fail");
+            return ResponseEntity.badRequest().body("fail : unValid-data");
+        }
+        if(adminService.admin_login_service(adminLoginDTO)){
+            // 가입 성공 시 200 OK 응답 반환
+            return ResponseEntity.ok(adminLoginDTO.getId());
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("fail : server Error - please contact - developer");
         }
