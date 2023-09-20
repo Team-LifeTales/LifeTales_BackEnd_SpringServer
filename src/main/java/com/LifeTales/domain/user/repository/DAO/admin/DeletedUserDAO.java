@@ -5,6 +5,7 @@ import lombok.Setter;
 
 @Getter @Setter
 public class DeletedUserDAO {
+    private Long seq;
     private String id;
     private String name;
     private String nickName;

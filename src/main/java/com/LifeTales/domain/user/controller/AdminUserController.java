@@ -58,11 +58,11 @@ public class AdminUserController {
     }
 
     @PostMapping("/main/userRecovery")
-    public ResponseEntity<DeletedUserDAO> userRecovery_findDeleted_all_user(@RequestParam(required = false, defaultValue = "0", value = "page") int pageNum
+    public ResponseEntity<Page<DeletedUserDAO>> userRecovery_findDeleted_all_user(@RequestParam(required = false, defaultValue = "0", value = "page") int pageNum
             , Pageable pageable) {
         log.info("userRecovery_findDeleted_all_user start");
-        Page<DeletedUserDAO> page =  adminService.deleted_user_find_all(pageNum , pageable);
-        return null;
+        Page<DeletedUserDAO> deletedUserPage =  adminService.deleted_user_find_all(pageNum , pageable);
+        return ResponseEntity.ok(deletedUserPage);
     }
 
 }

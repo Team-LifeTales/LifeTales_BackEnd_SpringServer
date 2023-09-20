@@ -86,6 +86,7 @@ public class AdminService {
         if(deletedUser != null){
             returnPage = deletedUser.map(userData ->{
                 DeletedUserDAO deletedUserDAO = new DeletedUserDAO();
+                deletedUserDAO.setSeq(userData.getSeq());
                 deletedUserDAO.setId(userData.getId());
                 deletedUserDAO.setName(userData.getName());
                 deletedUserDAO.setNickName(userData.getNickName());
@@ -96,6 +97,7 @@ public class AdminService {
             });
 
             for (DeletedUserDAO deletedUserDAO : returnPage) {
+                System.out.println("SEQ: " + deletedUserDAO.getSeq());
                 System.out.println("ID: " + deletedUserDAO.getId());
                 System.out.println("Name: " + deletedUserDAO.getName());
                 System.out.println("NickName: " + deletedUserDAO.getNickName());
