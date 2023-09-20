@@ -6,7 +6,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @Controller
@@ -28,6 +27,12 @@ public class AdminRootUserController {
     public String showMainForm(Model model) {
         // 로그인 폼 포에지 이동
         return "mainAdmin";
+    }
+
+    @GetMapping("/main/userRecovery")
+    public String showUserRecoveryPage(Model model) {
+        // 로그인 폼 포에지 이동
+        return "communication/userRecovery";
     }
 }
 

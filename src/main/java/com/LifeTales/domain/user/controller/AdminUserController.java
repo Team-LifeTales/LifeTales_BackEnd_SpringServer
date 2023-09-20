@@ -1,15 +1,15 @@
 package com.LifeTales.domain.user.controller;
 
+import com.LifeTales.domain.user.repository.DAO.admin.DeletedUserDAO;
 import com.LifeTales.domain.user.repository.DTO.admin.UserAdminLoginDTO;
 import com.LifeTales.domain.user.repository.DTO.admin.UserAdminSignInDTO;
 import com.LifeTales.domain.user.service.AdminService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -55,6 +55,14 @@ public class AdminUserController {
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("fail : server Error - please contact - developer");
         }
+    }
+
+    @PostMapping("/main/userRecovery")
+    public ResponseEntity<DeletedUserDAO> userRecovery_findDeleted_all_user(@RequestParam(required = false, defaultValue = "0", value = "page") int pageNum
+            , Pageable pageable) {
+        log.info("userRecovery_findDeleted_all_user start");
+        Page<DeletedUserDAO> page =  adminService.deleted_user_find_all(pageNum , pageable);
+        return null;
     }
 
 }

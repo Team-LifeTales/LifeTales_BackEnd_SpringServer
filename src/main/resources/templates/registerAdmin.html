@@ -33,18 +33,15 @@
       method: 'POST',
       body: new FormData(this),
     })
-            .then(function (response) {
+            .then(function (response , message) {
               if (response.status === 200) {
                 // 가입 성공 시 로그인 페이지로 리디렉션
-                window.location.href = '/login';
+                window.location.href = '/v1/users/admin/login';
               } else {
+                alert(message);
                 return response.text(); // 다른 응답 코드의 내용을 반환
               }
             })
-            .then(function (message) {
-              // 프론트엔드에 응답 내용 표시
-              alert(message);
-            });
   });
 </script>
 
