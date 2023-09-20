@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -158,12 +159,12 @@ public class FamilyController {
                                              @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
                                              Pageable pageable) throws IOException {
         log.info("null >> {}", searchNickName);
-        Page<FamilyDataDAO> familyDataDAOS = familyService.getFamilyDataForSignIn(searchNickName,pageNum , pageable);
-        if (familyDataDAOS == null) {
+        Page<FamilySignInDataDAO> familySignInDataDAOS = familyService.getFamilyDataForSignIn(searchNickName,pageNum , pageable);
+        if (familySignInDataDAOS == null) {
             log.info("null >> ");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("연관 가족이 존재하지 않습니다");
         } else {
-            String json = objectMapper.writeValueAsString(familyDataDAOS);
+            String json = objectMapper.writeValueAsString(familySignInDataDAOS);
             log.info(json);
             log.info("sucess");
             return ResponseEntity.ok(json);
@@ -171,24 +172,24 @@ public class FamilyController {
 
     }
 
-    @GetMapping("/familyData/question/{nickname}")
-    public ResponseEntity GetFamilyQuestionData(@PathVariable(required = true) String nickname) throws IOException {
-        log.info("start getFamilyQuestionData >> {}", nickname);
-        boolean checkNickNameExists = familyNicknameChecker.doesNicknameExist(nickname);
-        if (checkNickNameExists){
-            FamilySignInDataDAO familySignInDataDAO = familyService.getFamilyQandAData(nickname);
-            if (familySignInDataDAO == null) {
-                log.info("null >> familySignInDataDAO ");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
-            } else {
-                String json = objectMapper.writeValueAsString(familySignInDataDAO);
-                log.info(json);
-                log.info("sucess");
-                return ResponseEntity.ok(json);
+    @PostMapping("/familySignIn/checkAnswer")
+    public ResponseEntity<Boolean> FamilyCheckAnswer(@RequestBody Map<String, String> request){
+        String answer = request.get("answer");
+        String nickname = request.get("nickname");
+        log.info("FamilyCheckAnswer >> {}" , nickname);
+        if(familyNicknameChecker.doesNicknameExist(nickname)){
+            if(familyService.family_answer_check(nickname, answer)){
+                log.info("정답 ");
+                return ResponseEntity.ok(true);
+            }else{
+                log.info("사용가능 아이디 ");
+                return ResponseEntity.ok(false);
             }
         }else{
-            log.info("null >> familyNickName");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("가족이 존재하지 않습니다");
+            log.info("존재하지 않는 가족 ");
+            return ResponseEntity.ok(false);
         }
+
+
     }
 }

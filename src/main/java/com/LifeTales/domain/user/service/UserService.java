@@ -174,30 +174,22 @@ public class UserService {
             if(familyRepository.existsBySeq(userData.getFamilySeq())){
                 //familySeq 가 존재하는경우
                 log.info("user_signUp_step3_service >> familySeqCheck __ success");
-                Family family = familyRepository.findBySeq(userData.getFamilySeq());
-                if (family.getFamilySignInAnswer().equals(userData.getAnswerForSignIn())){
-                    log.info("user_signUp_step3_service >> familyAnswerTrue __ success");
-                    if(userData.getUserRole().equals("leader") || userData.getUserRole().equals("member")){
-                        //userRole Check (current)
-                        log.info("user_signUp_step3_service >> roleCheck __ success");
-                        //set Seq Number
-                        User user  = userRepository.findSeqById(userData.getId());
-                        Long userSeq = user.getSeq();
+                if(userData.getUserRole().equals("leader") || userData.getUserRole().equals("member")){
+                    //userRole Check (current)
+                    log.info("user_signUp_step3_service >> roleCheck __ success");
+                    //set Seq Number
+                    User user  = userRepository.findSeqById(userData.getId());
+                    Long userSeq = user.getSeq();
 
-                        //Start db merge
-                        user_signup_step3_db_service(userData.getFamilySeq() , userData.getUserRole() ,userSeq);
-                        return "Success";
-                        //end db merge
+                    //Start db merge
+                    user_signup_step3_db_service(userData.getFamilySeq() , userData.getUserRole() ,userSeq);
+                    return "Success";
+                    //end db merge
 
-                    }else{
-                        log.info("user_signUp_step3_service >> roleCheck __ fail");
-                        return "roleCheck Fail";
-                    }
                 }else{
-                    log.info("user_signUp_step3_service >> familyAnswerFalse __ fail");
-                    return "FamilyAnswer False";
+                    log.info("user_signUp_step3_service >> roleCheck __ fail");
+                    return "roleCheck Fail";
                 }
-
             }else{
                 //없음
                 log.info("user_signUp_step3_service >> familySeqCheck __ fail");

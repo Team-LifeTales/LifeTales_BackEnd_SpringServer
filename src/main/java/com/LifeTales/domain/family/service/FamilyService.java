@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.couchbase.CouchbaseProperties;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -125,7 +126,7 @@ public class FamilyService {
         return null;
     }
 
-    public Page<FamilyDataDAO> getFamilyDataForSignIn(String searchNickName, int pageNum , Pageable pageable) throws IOException {
+    public Page<FamilySignInDataDAO> getFamilyDataForSignIn(String searchNickName, int pageNum , Pageable pageable) throws IOException {
         /**
          * to do list
          * 가족 닉네임을 파라미터로 받음
@@ -147,7 +148,7 @@ public class FamilyService {
         //log.info("family >> {}",family);
         Page<Family> families = familyRepository2.findByNicknameContaining(searchNickName , pageable);
         log.info("getPage >> {}",families);
-        Page<FamilyDataDAO> returnPage = getPageFamilyData(families);
+        Page<FamilySignInDataDAO> returnPage = getPageFamilyData(families);
         if (returnPage == null){
             log.info("null_returnPage");
             return null;
@@ -180,36 +181,38 @@ public class FamilyService {
 
     }
 
-    public FamilySignInDataDAO getFamilyQandAData(String nickname){
-        log.info("start -> getFamilyQandAData");
-        Family family = familyRepository.findByNickname(nickname);
-        log.info("familyDataGet Success");
-        FamilySignInDataDAO familySignInDataDAO = new FamilySignInDataDAO();
-        familySignInDataDAO.setQuestionForSignIn(family.getFamilySignInQuestion());
-        familySignInDataDAO.setAnswerForSignIn(family.getFamilySignInAnswer());
-        if(familySignInDataDAO.getAnswerForSignIn() == null && familySignInDataDAO.getQuestionForSignIn() == null){
-            log.info("family Question or Answer Data not exists");
-            return null;
-        }
-        return familySignInDataDAO;
-    }
-    public Page<FamilyDataDAO> getPageFamilyData(Page<Family> families)throws  IOException{
-        Page<FamilyDataDAO> returnPage = families.map(family -> {
+    public Page<FamilySignInDataDAO> getPageFamilyData(Page<Family> families)throws  IOException{
+        Page<FamilySignInDataDAO> returnPage = families.map(family -> {
             boolean idCheck = userRepository.existsById(family.getUserSeq().getSeq());
             if (idCheck){
-                FamilyDataDAO familyDataDAO = new FamilyDataDAO();
-                familyDataDAO.setUserId(family.getUserSeq().getId());
-                familyDataDAO.setNickname(family.getNickname());
-                familyDataDAO.setIntroduce(family.getIntroduce());
-                familyDataDAO.setProfileIMGURL(family.getProfileIMG());
+                FamilySignInDataDAO familySignInDataDAO = new FamilySignInDataDAO();
+                familySignInDataDAO.setUserId(family.getUserSeq().getId());
+                familySignInDataDAO.setNickname(family.getNickname());
+                familySignInDataDAO.setIntroduce(family.getIntroduce());
+                familySignInDataDAO.setProfileIMGURL(family.getProfileIMG());
+                familySignInDataDAO.setQuestionForSignIn(family.getFamilySignInQuestion());
                 log.info("getfamilyDataDAO");
-                return familyDataDAO;
+                return familySignInDataDAO;
             }
             else{
                 return null;
             }
         });
         return returnPage;
+
+
+    }
+
+    public boolean family_answer_check(String nickname, String answer){
+        log.info("family_answer_check service start");
+        Family family = familyRepository.findByNickname(nickname);
+        if(family.getFamilySignInAnswer().equals(answer)){
+            log.info("correct answer ");
+            return true;
+        }else{
+            log.info("Incorrect answer");
+            return false;
+        }
 
 
     }
