@@ -1,10 +1,9 @@
 package com.LifeTales.domain.feed.controller;
 
-import com.LifeTales.common.User.FamilyNicknameChecker;
 import com.LifeTales.common.User.UserIdChecker;
 import com.LifeTales.domain.family.domain.Family;
-import com.LifeTales.domain.feed.repository.DAO.FeedDataDTO;
-import com.LifeTales.domain.feed.repository.DAO.FeedDetailDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDataDAO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDetailDAO;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.service.FeedService;
 import com.LifeTales.domain.user.domain.User;
@@ -129,10 +128,10 @@ public class FeedController {
         String id = tokenUtil.findUserIdForJWT(request);
         if(userIdChecker.doesIdExist(id)){
             log.info("lifeTalesFeedDataForUserGetTest >> id : {}", id);
-            Page<FeedDataDTO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
+            Page<FeedDataDAO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
             if (feedDataDTO == null) {
                 log.info("null >> ");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("feedData 가져오기 실패");
             } else {
                 String json = objectMapper.writeValueAsString(feedDataDTO);
                 log.info(json);
@@ -140,11 +139,11 @@ public class FeedController {
                 return ResponseEntity.ok(json);
             }
         }
-        return null;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
     }
 
     @GetMapping("/feedDataFamily/")
-    public ResponseEntity<Page<FeedDataDTO>> getFeedDataForFamily(
+    public ResponseEntity getFeedDataForFamily(
             HttpServletRequest request,
             @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
             Pageable pageable
@@ -154,11 +153,11 @@ public class FeedController {
             User user = userRepository.findById(id);
             if(user.getFamilySeq()!=null){
                 Family family = user.getFamilySeq();
-                log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", family.getNickName());
-                Page<FeedDataDTO> feedPage = feedService.getFeedDataForFamily(family.getNickName(), pageNum, pageable);
+                log.info("lifeTalesFeedDataForFamilyGetTest >> id : {}", family.getNickname());
+                Page<FeedDataDAO> feedPage = feedService.getFeedDataForFamily(family.getNickname(), pageNum, pageable);
                 if (feedPage == null) {
                     log.info("null >> ");
-                    return null;
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("feed data 가져오기 실패");
                 } else {
                     String json = objectMapper.writeValueAsString(feedPage);
                     log.info(json);
@@ -167,19 +166,18 @@ public class FeedController {
                 }
             }else{
                 log.info("not exists family");
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).body("family가 존재하지 않음");
             }
         }else{
             log.info("not exists user");
-            return null;
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("user가 존재하지 않음");
         }
-
-        return null;
-
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("IOException");
     }
     @GetMapping("/feedDetail/{seq}")
     public ResponseEntity GetFeedDetail(@PathVariable Long seq) throws IOException {
         log.info("lifeTalesFeedDataDetailGet>> seq : {}", seq);
-        FeedDetailDTO feedDetailDTO = feedService.getFeedDetail(seq);
+        FeedDetailDAO feedDetailDTO = feedService.getFeedDetail(seq);
         if (feedDetailDTO == null) {
             log.info("null >> ");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");

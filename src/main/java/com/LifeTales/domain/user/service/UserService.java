@@ -190,7 +190,6 @@ public class UserService {
                     log.info("user_signUp_step3_service >> roleCheck __ fail");
                     return "roleCheck Fail";
                 }
-
             }else{
                 //없음
                 log.info("user_signUp_step3_service >> familySeqCheck __ fail");

@@ -7,8 +7,8 @@ import com.LifeTales.domain.family.domain.Family;
 import com.LifeTales.domain.family.repository.FamilyRepository;
 import com.LifeTales.domain.feed.domain.Feed;
 import com.LifeTales.domain.feed.domain.FeedImageList;
-import com.LifeTales.domain.feed.repository.DAO.FeedDataDTO;
-import com.LifeTales.domain.feed.repository.DAO.FeedDetailDTO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDataDAO;
+import com.LifeTales.domain.feed.repository.DAO.FeedDetailDAO;
 import com.LifeTales.domain.feed.repository.DTO.FeedUploadDTO;
 import com.LifeTales.domain.feed.repository.FeedImageListRepository;
 import com.LifeTales.domain.feed.repository.FeedRepository;
@@ -127,7 +127,7 @@ public class FeedService {
         }
     }
 
-    public Page<FeedDataDTO> getFeedDataForFamily(String nickname, int pageNum , Pageable pageable) throws IOException {
+    public Page<FeedDataDAO> getFeedDataForFamily(String nickname, int pageNum , Pageable pageable) throws IOException {
         /**
          * to do list
          * 가족 닉네임을 파라미터로 받음
@@ -138,7 +138,7 @@ public class FeedService {
          * */
 
         log.info("getFeedDataForFamily Start >> {}",nickname);
-        boolean nickNameCheck = familyRepository.existsByNickName(nickname);
+        boolean nickNameCheck = familyRepository.existsByNickname(nickname);
         log.info("getFeedDataForFamily checkId result >> {}" , nickNameCheck);
         if(nickNameCheck){
             log.info("getFeedDataForFamily checkId Success >> {}" , nickname);
@@ -148,9 +148,9 @@ public class FeedService {
             pageable = PageRequest.of(pageNum, PAGE_POST_COUNT, sort);
 
 
-            Family family = familyRepository.findByNickName(nickname);
+            Family family = familyRepository.findByNickname(nickname);
             Page<Feed> feedPage = feedRepository.findByFamilySeqAndIsDELETED(family, false , pageable );
-            Page<FeedDataDTO> returnPage = getPageFeedData(feedPage);
+            Page<FeedDataDAO> returnPage = getPageFeedData(feedPage);
             if (returnPage == null){
                 return null;
             }
@@ -163,7 +163,7 @@ public class FeedService {
 
     }
 
-    public Page<FeedDataDTO> getFeedDataForUser(String id, int pageNum , Pageable pageable) throws IOException {
+    public Page<FeedDataDAO> getFeedDataForUser(String id, int pageNum , Pageable pageable) throws IOException {
         /**
          * to do list
          * 가족 닉네임을 파라미터로 받음
@@ -187,7 +187,7 @@ public class FeedService {
             User user = userRepository.findById(id);
             //List<FeedDataDTO> feedDataDTOList = new ArrayList<>(); // feed에 대한 정보들도 리스트로 만듬, 들어가는 정보 (메인사진, userSeq, familySeq, )
             Page<Feed> feedPage = feedRepository.findByUserSeqAndIsDELETED(user, false , pageable );
-            Page<FeedDataDTO> returnPage = getPageFeedData(feedPage);
+            Page<FeedDataDAO> returnPage = getPageFeedData(feedPage);
             if (returnPage == null){
                 return null;
             }
@@ -200,7 +200,7 @@ public class FeedService {
 
     }
 
-    public FeedDetailDTO getFeedDetail(Long feedSeq) throws IOException {
+    public FeedDetailDAO getFeedDetail(Long feedSeq) throws IOException {
         /**
          * to do list
          * feedSeq를 파라미터로 받음
@@ -215,7 +215,7 @@ public class FeedService {
             log.info("getFeedDetail checkSeq Success >> {}" , feedSeqCheck);
 
             Feed feed = feedRepository.findBySeq(feedSeq);
-            FeedDetailDTO feedDetailDTO = new FeedDetailDTO();
+            FeedDetailDAO feedDetailDTO = new FeedDetailDAO();
             Long userSeq = feed.getUserSeq().getSeq();
             Long familySeq = feed.getFamilySeq().getSeq();
             LocalDateTime isCreated = feed.getIsCreated();
@@ -224,27 +224,10 @@ public class FeedService {
             boolean nickNameCheck = familyRepository.existsById(familySeq);
             if (userCheck && nickNameCheck){
                 List<FeedImageList> feedImageList = feedImageListRepository.findByFeedSeq(feed);
-                List<InputStream> feedImages = new ArrayList<>();
+                List<String> feedImages = new ArrayList<>();
                 //데이터 셋업
                 for(FeedImageList feedImage : feedImageList){
-                    String feedImageURL = feedImage.getFeedImageURL();
-                    if(feedImageURL != null){
-                        log.info("getFeedDetail S3 connect Start");
-                        String objectKey = feedImageURL;
-                        try {
-                            InputStream feedIMG = imgService.getImageInputStream(objectKey);
-                            feedImages.add(feedIMG);
-
-                        }catch (SdkClientException e){
-                            //aws sdk Error
-                            log.error("getFeedDetail : " + e);
-                            return null;
-                        }catch (Exception e){
-                            log.error("getFeedDetail : " + e);
-                            return null;
-                        }
-
-                    }
+                    feedImages.add(feedImage.getFeedImageURL());
                 }
                 feedDetailDTO.setUserSeq(userSeq);
                 feedDetailDTO.setIsCreated(isCreated);
@@ -263,39 +246,33 @@ public class FeedService {
         return null;
     }
 
-    public Page<FeedDataDTO> getPageFeedData(Page<Feed> feedPage)throws  IOException{
-        Page<FeedDataDTO> returnPage = feedPage.map(feedData -> {
-            boolean idCheck = userRepository.existsById(feedData.getUserSeq().getSeq());
-            if (idCheck){
-                FeedDataDTO feedDataDTO = new FeedDataDTO();
-                feedDataDTO.setUserSeq(feedData.getUserSeq().getSeq());
-                feedDataDTO.setFeedSeq(feedData.getSeq());
-                feedDataDTO.setFeedIMG(null);
-                FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
-                String firstFeedImageURL = feedImage.getFeedImageURL();
-                if(firstFeedImageURL != null){
-                    log.info("getFeedDataForFamily S3 connect Start");
-                    String objectKey = firstFeedImageURL;
-                    try {
-                        InputStream feedIMG = imgService.getImageInputStream(objectKey);
-                        feedDataDTO.setFeedIMG(feedIMG); //이미지까지 입력했을 시에 DTO리스트에 추가
-
-                    }catch (SdkClientException e){
-                        //aws sdk Error
-                        log.error("getFeedDataForFamily : " + e);
-                        return null;
-                    }catch (Exception e){
-                        log.error("getFeedDataForFamily : " + e);
-                        return null;
-                    }
+    public Page<FeedDataDAO> getPageFeedData(Page<Feed> feedPage)throws  IOException{
+        try{
+            Page<FeedDataDAO> returnPage = feedPage.map(feedData -> {
+                boolean idCheck = userRepository.existsById(feedData.getUserSeq().getSeq());
+                if (idCheck){
+                    FeedDataDAO feedDataDAO = new FeedDataDAO();
+                    feedDataDAO.setUserSeq(feedData.getUserSeq().getSeq());
+                    feedDataDAO.setFeedSeq(feedData.getSeq());
+                    feedDataDAO.setFeedIMG(null);
+                    FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
+                    String firstFeedImageURL = feedImage.getFeedImageURL();
+                    feedDataDAO.setFeedIMG(firstFeedImageURL);
+                    return feedDataDAO;
                 }
-                return feedDataDTO;
-            }
-            else{
-                return null;
-            }
-        });
-        return returnPage;
+                else{
+                    return null;
+                }
+            });
+            return returnPage;
+        }catch (DataAccessException ex) {
+            log.error("데이터베이스 예외 발생", ex);
+            return null;
+        } catch (RuntimeException ex) {
+            log.error("런타임 예외 발생", ex);
+            return null;
+        }
+
 
 
     }

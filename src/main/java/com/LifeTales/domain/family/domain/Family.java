@@ -43,7 +43,7 @@ public class Family {
     @Column(name="SEQ")
     private Long seq;
     @Column(name = "NICKNAME" , nullable = false , length = 10 , unique = true)
-    private String nickName;
+    private String nickname;
 
     @Column(name = "PROFILEIMG" , nullable = true , length = 100)
     private String profileIMG;

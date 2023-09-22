@@ -167,7 +167,6 @@ public class BasicUserController {
     @PostMapping("/signUp/step3")
     public ResponseEntity basicUserSignUpJoinFamily(@RequestBody UserSignUpStep3DTO signUpData){
         log.info("basicUserSignUpJoinFamily >> {}" ,signUpData.getId());
-
         String return_text = userService.user_signUp_step3_service(signUpData);
         if(return_text.equals("Success")){
             return ResponseEntity.ok("Success");

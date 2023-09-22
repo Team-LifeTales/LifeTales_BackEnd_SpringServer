@@ -6,11 +6,12 @@ import lombok.Setter;
 import java.io.InputStream;
 
 @Getter @Setter
-public class FamilyDataDAO {
+public class FamilySignInDataDAO {
 
     private String nickname;
     private String introduce;
     private String profileIMGURL;
     private String userId;
+    private String questionForSignIn;
 
 }

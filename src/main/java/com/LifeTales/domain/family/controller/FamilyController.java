@@ -4,6 +4,7 @@ import com.LifeTales.common.User.FamilyNicknameChecker;
 import com.LifeTales.common.User.UserIdChecker;
 import com.LifeTales.domain.family.domain.Family;
 import com.LifeTales.domain.family.repository.DAO.FamilyDataDAO;
+import com.LifeTales.domain.family.repository.DAO.FamilySignInDataDAO;
 import com.LifeTales.domain.family.repository.DTO.FamilySignUpDTO;
 import com.LifeTales.domain.family.service.FamilyService;
 import com.LifeTales.domain.user.domain.User;
@@ -12,6 +13,9 @@ import com.LifeTales.global.Validator.FamilySignUpValidator;
 import com.LifeTales.global.util.UseTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.el.parser.AstFalse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -73,7 +78,7 @@ public class FamilyController {
         if("Success".equals(returnValidText)){
 
             // Service (Create Logic Start)
-            boolean checkNickNameExists = familyNicknameChecker.doesNickNameExist(nickname); //nickName 존재하는 지
+            boolean checkNickNameExists = familyNicknameChecker.doesNicknameExist(nickname); //nickName 존재하는 지
             boolean checkUserSeqExists = userIdChecker.doesIdExist(userId); //user 존재하는 지
             if (!checkNickNameExists && checkUserSeqExists){
                 log.info("FamilySignUp service logic Start");
@@ -121,7 +126,7 @@ public class FamilyController {
     }
 
     @ResponseBody
-    @GetMapping("home/")
+    @GetMapping("/home")
     public ResponseEntity FamilyHomeData(HttpServletRequest request) throws IOException {
 
         String id = tokenUtil.findUserIdForJWT(request);
@@ -129,8 +134,8 @@ public class FamilyController {
             User user = userRepository.findById(id);
             if (user.getFamilySeq()!= null){
                 Family family = user.getFamilySeq();
-                log.info("lifeTalesFamilyDataGetTest >> id : {}" , family.getNickName());
-                FamilyDataDAO familyDataDAO = familyService.getDataForFamily(family.getNickName());
+                log.info("lifeTalesFamilyDataGetTest >> id : {}" , family.getNickname());
+                FamilyDataDAO familyDataDAO = familyService.getDataForFamily(family.getNickname());
                 if(familyDataDAO == null){
                     log.info("null >> ");
                     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
@@ -142,11 +147,51 @@ public class FamilyController {
             }
             else{
                 log.info("family not exists");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 가족");
             }
 
         }else{
             log.info("user not exists");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 유저");
         }
-        return null;
+    }
+
+    @GetMapping("/familyData/{searchNickName}")
+    public ResponseEntity GetFamilyDataForSignIn(@PathVariable(required = true) String searchNickName,
+                                             @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
+                                             Pageable pageable) throws IOException {
+        log.info("null >> {}", searchNickName);
+        Page<FamilySignInDataDAO> familySignInDataDAOS = familyService.getFamilyDataForSignIn(searchNickName,pageNum , pageable);
+        if (familySignInDataDAOS == null) {
+            log.info("null >> ");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("연관 가족이 존재하지 않습니다");
+        } else {
+            String json = objectMapper.writeValueAsString(familySignInDataDAOS);
+            log.info(json);
+            log.info("sucess");
+            return ResponseEntity.ok(json);
+        }
+
+    }
+
+    @PostMapping("/familySignIn/checkAnswer")
+    public ResponseEntity<Boolean> FamilyCheckAnswer(@RequestBody Map<String, String> request){
+        String answer = request.get("answer");
+        String nickname = request.get("nickname");
+        log.info("FamilyCheckAnswer >> {}" , nickname);
+        if(familyNicknameChecker.doesNicknameExist(nickname)){
+            if(familyService.family_answer_check(nickname, answer)){
+                log.info("정답 ");
+                return ResponseEntity.ok(true);
+            }else{
+                log.info("오답");
+                return ResponseEntity.ok(false);
+            }
+        }else{
+            log.info("존재하지 않는 가족 ");
+            return ResponseEntity.badRequest().build();
+        }
+
+
     }
 }
