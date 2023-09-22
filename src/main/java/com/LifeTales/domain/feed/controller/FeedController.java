@@ -131,7 +131,7 @@ public class FeedController {
             Page<FeedDataDAO> feedDataDTO = feedService.getFeedDataForUser(id, pageNum , pageable);
             if (feedDataDTO == null) {
                 log.info("null >> ");
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("feedData 가져오기 실패");
             } else {
                 String json = objectMapper.writeValueAsString(feedDataDTO);
                 log.info(json);
@@ -139,11 +139,11 @@ public class FeedController {
                 return ResponseEntity.ok(json);
             }
         }
-        return null;
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 아이디");
     }
 
     @GetMapping("/feedDataFamily/")
-    public ResponseEntity<Page<FeedDataDAO>> getFeedDataForFamily(
+    public ResponseEntity getFeedDataForFamily(
             HttpServletRequest request,
             @RequestParam(required = false, defaultValue = "0", value = "page") int pageNum,
             Pageable pageable
@@ -157,7 +157,7 @@ public class FeedController {
                 Page<FeedDataDAO> feedPage = feedService.getFeedDataForFamily(family.getNickname(), pageNum, pageable);
                 if (feedPage == null) {
                     log.info("null >> ");
-                    return null;
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("feed data 가져오기 실패");
                 } else {
                     String json = objectMapper.writeValueAsString(feedPage);
                     log.info(json);
@@ -166,14 +166,13 @@ public class FeedController {
                 }
             }else{
                 log.info("not exists family");
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).body("family가 존재하지 않음");
             }
         }else{
             log.info("not exists user");
-            return null;
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("user가 존재하지 않음");
         }
-
-        return null;
-
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("IOException");
     }
     @GetMapping("/feedDetail/{seq}")
     public ResponseEntity GetFeedDetail(@PathVariable Long seq) throws IOException {

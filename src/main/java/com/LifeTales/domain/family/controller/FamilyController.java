@@ -13,6 +13,7 @@ import com.LifeTales.global.Validator.FamilySignUpValidator;
 import com.LifeTales.global.util.UseTokenUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.el.parser.AstFalse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -125,7 +126,7 @@ public class FamilyController {
     }
 
     @ResponseBody
-    @GetMapping("/home/")
+    @GetMapping("/home")
     public ResponseEntity FamilyHomeData(HttpServletRequest request) throws IOException {
 
         String id = tokenUtil.findUserIdForJWT(request);
@@ -146,12 +147,13 @@ public class FamilyController {
             }
             else{
                 log.info("family not exists");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 가족");
             }
 
         }else{
             log.info("user not exists");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("존재하지 않는 유저");
         }
-        return null;
     }
 
     @GetMapping("/familyData/{searchNickName}")
@@ -182,12 +184,12 @@ public class FamilyController {
                 log.info("정답 ");
                 return ResponseEntity.ok(true);
             }else{
-                log.info("사용가능 아이디 ");
+                log.info("오답");
                 return ResponseEntity.ok(false);
             }
         }else{
             log.info("존재하지 않는 가족 ");
-            return ResponseEntity.ok(false);
+            return ResponseEntity.badRequest().build();
         }
 
 

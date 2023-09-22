@@ -247,23 +247,32 @@ public class FeedService {
     }
 
     public Page<FeedDataDAO> getPageFeedData(Page<Feed> feedPage)throws  IOException{
-        Page<FeedDataDAO> returnPage = feedPage.map(feedData -> {
-            boolean idCheck = userRepository.existsById(feedData.getUserSeq().getSeq());
-            if (idCheck){
-                FeedDataDAO feedDataDAO = new FeedDataDAO();
-                feedDataDAO.setUserSeq(feedData.getUserSeq().getSeq());
-                feedDataDAO.setFeedSeq(feedData.getSeq());
-                feedDataDAO.setFeedIMG(null);
-                FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
-                String firstFeedImageURL = feedImage.getFeedImageURL();
-                feedDataDAO.setFeedIMG(firstFeedImageURL);
-                return feedDataDAO;
-            }
-            else{
-                return null;
-            }
-        });
-        return returnPage;
+        try{
+            Page<FeedDataDAO> returnPage = feedPage.map(feedData -> {
+                boolean idCheck = userRepository.existsById(feedData.getUserSeq().getSeq());
+                if (idCheck){
+                    FeedDataDAO feedDataDAO = new FeedDataDAO();
+                    feedDataDAO.setUserSeq(feedData.getUserSeq().getSeq());
+                    feedDataDAO.setFeedSeq(feedData.getSeq());
+                    feedDataDAO.setFeedIMG(null);
+                    FeedImageList feedImage = feedImageListRepository.findFirstByFeedSeq(feedData);
+                    String firstFeedImageURL = feedImage.getFeedImageURL();
+                    feedDataDAO.setFeedIMG(firstFeedImageURL);
+                    return feedDataDAO;
+                }
+                else{
+                    return null;
+                }
+            });
+            return returnPage;
+        }catch (DataAccessException ex) {
+            log.error("데이터베이스 예외 발생", ex);
+            return null;
+        } catch (RuntimeException ex) {
+            log.error("런타임 예외 발생", ex);
+            return null;
+        }
+
 
 
     }

@@ -102,28 +102,33 @@ public class FamilyService {
          * 존재하는 경우 - 데이터 저장 .. 가족 프로필 이미지 , 가족 닉네임 , 가족 소개 , 대표 유저 코드
          * 가족 프로필이미지 - 존재하는지 - 있으면 s3에서 받아와야함
          */
-
-        log.info("getDataForFamily Start >> {}",nickname);
-        boolean nickNameCheck = familySeqChecker.doesNicknameExist(nickname);
-        log.info("getDataForFamily checkNickname result >> {}" , nickNameCheck);
-        if(nickNameCheck){
-            log.info("getDataForFamily checkNickName Success >> {}" , nickname);
-            FamilyDataDAO familyDataDAO = new FamilyDataDAO();
-            Family familyData = familyRepository.findByNickname(nickname);
-            //데이터 셋업
-            familyDataDAO.setUserId(familyData.getUserSeq().getId());
-            familyDataDAO.setIntroduce(familyData.getIntroduce());
-            familyDataDAO.setNickname(familyData.getNickname());
-            familyDataDAO.setProfileIMGURL(familyData.getProfileIMG());
-            log.info("getDataForFamily checkNickName Success >> {}" , familyDataDAO);
-            return familyDataDAO;
-
-
-        }else{
-            log.error("getDataForFamily :  not exists Family Data" );
+        try {
+            log.info("getDataForFamily Start >> {}",nickname);
+            boolean nickNameCheck = familySeqChecker.doesNicknameExist(nickname);
+            log.info("getDataForFamily checkNickname result >> {}" , nickNameCheck);
+            if(nickNameCheck){
+                log.info("getDataForFamily checkNickName Success >> {}" , nickname);
+                FamilyDataDAO familyDataDAO = new FamilyDataDAO();
+                Family familyData = familyRepository.findByNickname(nickname);
+                //데이터 셋업
+                familyDataDAO.setUserId(familyData.getUserSeq().getId());
+                familyDataDAO.setIntroduce(familyData.getIntroduce());
+                familyDataDAO.setNickname(familyData.getNickname());
+                familyDataDAO.setProfileIMGURL(familyData.getProfileIMG());
+                log.info("getDataForFamily checkNickName Success >> {}" , familyDataDAO);
+                return familyDataDAO;
+            }else{
+                log.error("getDataForFamily :  not exists Family Data" );
+            }
+            return null;
+        }catch (DataAccessException ex) {
+            log.error("데이터베이스 예외 발생", ex);
+            return null;
+        } catch (RuntimeException ex) {
+            log.error("런타임 예외 발생", ex);
+            return null;
         }
 
-        return null;
     }
 
     public Page<FamilySignInDataDAO> getFamilyDataForSignIn(String searchNickName, int pageNum , Pageable pageable) throws IOException {
@@ -141,19 +146,19 @@ public class FamilyService {
                 Sort.Order.desc(orderCriteria)
         );
         pageable = PageRequest.of(pageNum, PAGE_POST_COUNT, sort);
-        log.info("snn >> {}",searchNickName);
-        boolean f = familyRepository.existsByNickname(searchNickName);
-        log.info("family >> {}",f);
-        //Family family = familyRepository.findByNickname(searchNickName);
-        //log.info("family >> {}",family);
-        Page<Family> families = familyRepository2.findByNicknameContaining(searchNickName , pageable);
-        log.info("getPage >> {}",families);
-        Page<FamilySignInDataDAO> returnPage = getPageFamilyData(families);
-        if (returnPage == null){
-            log.info("null_returnPage");
+        try{
+            Page<Family> families = familyRepository2.findByNicknameContaining(searchNickName , pageable);
+            log.info("getPage >> {}",families);
+            Page<FamilySignInDataDAO> returnPage = getPageFamilyData(families);
+            return returnPage;
+
+        }catch (DataAccessException ex) {
+            log.error("데이터베이스 예외 발생", ex);
+            return null;
+        } catch (RuntimeException ex) {
+            log.error("런타임 예외 발생", ex);
             return null;
         }
-        return returnPage;
 
 
     }
@@ -182,23 +187,31 @@ public class FamilyService {
     }
 
     public Page<FamilySignInDataDAO> getPageFamilyData(Page<Family> families)throws  IOException{
-        Page<FamilySignInDataDAO> returnPage = families.map(family -> {
-            boolean idCheck = userRepository.existsById(family.getUserSeq().getSeq());
-            if (idCheck){
-                FamilySignInDataDAO familySignInDataDAO = new FamilySignInDataDAO();
-                familySignInDataDAO.setUserId(family.getUserSeq().getId());
-                familySignInDataDAO.setNickname(family.getNickname());
-                familySignInDataDAO.setIntroduce(family.getIntroduce());
-                familySignInDataDAO.setProfileIMGURL(family.getProfileIMG());
-                familySignInDataDAO.setQuestionForSignIn(family.getFamilySignInQuestion());
-                log.info("getfamilyDataDAO");
-                return familySignInDataDAO;
-            }
-            else{
-                return null;
-            }
-        });
-        return returnPage;
+        try {
+            Page<FamilySignInDataDAO> returnPage = families.map(family -> {
+                boolean idCheck = userRepository.existsById(family.getUserSeq().getSeq());
+                if (idCheck){
+                    FamilySignInDataDAO familySignInDataDAO = new FamilySignInDataDAO();
+                    familySignInDataDAO.setUserId(family.getUserSeq().getId());
+                    familySignInDataDAO.setNickname(family.getNickname());
+                    familySignInDataDAO.setIntroduce(family.getIntroduce());
+                    familySignInDataDAO.setProfileIMGURL(family.getProfileIMG());
+                    familySignInDataDAO.setQuestionForSignIn(family.getFamilySignInQuestion());
+                    log.info("getfamilyDataDAO");
+                    return familySignInDataDAO;
+                }
+                else{
+                    return null;
+                }
+            });
+            return returnPage;
+        }catch (DataAccessException ex) {
+            log.error("데이터베이스 예외 발생", ex);
+            return null;
+        } catch (RuntimeException ex) {
+            log.error("런타임 예외 발생", ex);
+            return null;
+        }
 
 
     }
